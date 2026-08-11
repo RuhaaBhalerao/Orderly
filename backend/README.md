@@ -1,284 +1,519 @@
 # Procure AI Backend
 
-Spring Boot backend for Procure AI - AI-powered Contract Intelligence Platform
+Node.js + Express + TypeScript backend for Procure AI - AI-powered Contract Intelligence Platform
 
 ## Tech Stack
 
-- **Java 21**
-- **Spring Boot 3.2.0**
-- **Spring Web** - REST API
-- **Spring Data JPA** - Database ORM
-- **Spring Security** - Authentication & Authorization
-- **JWT (JJWT)** - Token-based authentication
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web framework
+- **TypeScript** - Type-safe JavaScript
+- **Prisma ORM** - Database ORM
 - **PostgreSQL** - Database
-- **Lombok** - Reduce boilerplate code
-- **Maven** - Build tool
+- **JWT** - Authentication
+- **bcrypt** - Password hashing
+- **express-validator** - Input validation
+- **CORS** - Cross-origin requests
+
+## Features
+
+### Phase 1: Authentication
+- ✅ User registration with email validation
+- ✅ User login with password verification
+- ✅ JWT token generation and verification
+- ✅ Protected endpoints with authentication middleware
+- ✅ Password hashing with bcrypt
+
+### Phase 2: Contract Management
+- ✅ Create contracts (owned by user)
+- ✅ List all user contracts
+- ✅ Get single contract details
+- ✅ Update contract information
+- ✅ Delete contracts
+- ✅ User ownership verification
+
+### Phase 3: Chat History
+- ✅ Save chat messages (user + AI response)
+- ✅ Retrieve chat history for contracts
+- ✅ Timestamp tracking
+- ✅ Contract ownership verification
 
 ## Project Structure
 
 ```
 backend/
-├── src/main/java/com/procureai/
-│   ├── controller/           # REST API endpoints
-│   │   └── AuthController.java
-│   ├── service/              # Business logic
-│   │   └── AuthService.java
-│   ├── repository/           # Database access
-│   │   └── UserRepository.java
-│   ├── model/                # Entity classes
-│   │   └── User.java
-│   ├── security/             # Security configuration
-│   │   ├── JwtTokenProvider.java
-│   │   └── JwtAuthenticationFilter.java
-│   ├── config/               # Configuration classes
-│   │   └── SecurityConfig.java
-│   ├── dto/                  # Data transfer objects
-│   │   ├── AuthRequest.java
-│   │   ├── LoginRequest.java
-│   │   └── AuthResponse.java
-│   ├── exception/            # Exception handling
-│   │   └── GlobalExceptionHandler.java
-│   └── ProcureAiApplication.java  # Main application class
-│
-├── src/main/resources/
-│   └── application.properties      # Configuration
-│
-├── pom.xml                         # Maven dependencies
-└── README.md                       # This file
+├── src/
+│   ├── controllers/           # Route handlers
+│   │   ├── authController.ts
+│   │   ├── contractController.ts
+│   │   └── chatController.ts
+│   ├── services/              # Business logic
+│   │   ├── authService.ts
+│   │   ├── contractService.ts
+│   │   └── chatService.ts
+│   ├── routes/                # API route definitions
+│   │   ├── authRoutes.ts
+│   │   ├── contractRoutes.ts
+│   │   └── chatRoutes.ts
+│   ├── middleware/            # Express middleware
+│   │   ├── authMiddleware.ts
+│   │   └── errorMiddleware.ts
+│   ├── utils/                 # Utility functions
+│   │   ├── jwt.ts
+│   │   └── password.ts
+│   ├── types/                 # TypeScript types
+│   │   └── auth.ts
+│   ├── lib/                   # Library exports
+│   │   └── prisma.ts
+│   └── server.ts              # Main server file
+├── prisma/
+│   └── schema.prisma          # Database schema
+├── dist/                      # Compiled JavaScript (generated)
+├── .env                       # Environment variables (gitignored)
+├── .env.example               # Environment template
+├── .gitignore
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
 ## Setup Instructions
 
 ### Prerequisites
 
-- Java 21 installed
-- PostgreSQL running locally
-- Maven installed
-- Git
+- **Node.js** 18+ (download from [nodejs.org](https://nodejs.org))
+- **npm** (comes with Node.js)
+- **PostgreSQL** 12+ (download from [postgresql.org](https://www.postgresql.org/download))
+- **Git**
 
-### Database Setup
+### 1. Database Setup
 
-1. Create PostgreSQL database:
-```sql
+#### Create PostgreSQL Database
+
+```bash
+# Connect to PostgreSQL
+psql -U postgres
+
+# Create database
 CREATE DATABASE procure_ai;
+
+# Exit psql
+\q
 ```
 
-2. Create user (optional but recommended):
-```sql
-CREATE USER procure_user WITH ENCRYPTED PASSWORD 'procure_password';
-GRANT ALL PRIVILEGES ON DATABASE procure_ai TO procure_user;
-```
+Or using a GUI tool like pgAdmin.
 
-### Configuration
+### 2. Clone & Install Dependencies
 
-1. Update `application.properties` with your database credentials:
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/procure_ai
-spring.datasource.username=postgres
-spring.datasource.password=your_password
-jwt.secret=your-very-long-secure-random-string-here
-```
-
-2. Change JWT secret to a strong random string in production!
-
-### Build & Run
-
-1. **Build the project:**
 ```bash
+# Navigate to backend directory
 cd backend
-mvn clean install
+
+# Install dependencies
+npm install
 ```
 
-2. **Run the application:**
+### 3. Environment Configuration
+
 ```bash
-mvn spring-boot:run
+# Copy example env file
+cp .env.example .env
+
+# Edit .env with your values
+# Use your text editor to open .env and configure:
+# - DATABASE_URL
+# - JWT_SECRET
+# - PORT (optional, defaults to 5000)
+# - FRONTEND_URL (optional, defaults to http://localhost:3000)
 ```
 
-The backend will start on `http://localhost:8080`
+**Example .env file:**
+```
+DATABASE_URL="postgresql://postgres:your_password@localhost:5432/procure_ai"
+JWT_SECRET="your-super-secret-jwt-key-change-in-production"
+JWT_EXPIRES_IN="7d"
+PORT=5000
+NODE_ENV="development"
+FRONTEND_URL="http://localhost:3000"
+```
 
-Alternatively, run the JAR file:
+### 4. Database Migration
+
 ```bash
-java -jar target/procure-ai-backend-1.0.0.jar
+# Generate Prisma client
+npm run prisma:generate
+
+# Run migrations (creates tables)
+npm run prisma:migrate
+
+# Optional: Open Prisma Studio (visual database editor)
+npm run prisma:studio
+```
+
+### 5. Start Development Server
+
+```bash
+npm run dev
+```
+
+The backend will start on `http://localhost:5000`
+
+You should see:
+```
+╔══════════════════════════════════════════════════════════╗
+║       Procure AI Backend - Node.js + Express             ║
+╠══════════════════════════════════════════════════════════╣
+║ Server running on port 5000                              ║
+║ Environment: development                                 ║
+║ Frontend URL: http://localhost:3000                      ║
+║ Database: PostgreSQL                                     ║
+║ API Health: http://localhost:5000/health               ║
+╚══════════════════════════════════════════════════════════╝
 ```
 
 ## API Endpoints
 
-### Authentication Endpoints
+### Authentication
 
-#### 1. Register User
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/register` | ❌ | Register new user |
+| POST | `/api/auth/login` | ❌ | Login user |
+| GET | `/api/auth/me` | ✅ | Get current user |
+
+### Contracts
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/contracts` | ✅ | List all user contracts |
+| GET | `/api/contracts/:id` | ✅ | Get contract details |
+| POST | `/api/contracts` | ✅ | Create contract |
+| PUT | `/api/contracts/:id` | ✅ | Update contract |
+| DELETE | `/api/contracts/:id` | ✅ | Delete contract |
+
+### Chat History
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| GET | `/api/contracts/:contractId/chat` | ✅ | Get chat history |
+| POST | `/api/contracts/:contractId/chat` | ✅ | Save chat message |
+
+## API Examples
+
+### Register User
+
+**Request:**
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123"
+  }'
 ```
-POST /api/auth/register
-Content-Type: application/json
 
+**Response (201):**
+```json
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123"
-}
-
-Response (201 Created):
-{
-  "token": "eyJhbGciOiJIUzUxMiJ9...",
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "John Doe",
-  "email": "john@example.com"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "clh1abc...",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
 }
 ```
 
-#### 2. Login
-```
-POST /api/auth/login
-Content-Type: application/json
+### Login User
 
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-
-Response (200 OK):
-{
-  "token": "eyJhbGciOiJIUzUxMiJ9...",
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "John Doe",
-  "email": "john@example.com"
-}
+**Request:**
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "password123"
+  }'
 ```
 
-#### 3. Get Current User (Protected)
-```
-GET /api/auth/me
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9...
-
-Response (200 OK):
+**Response (200):**
+```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "John Doe",
-  "email": "john@example.com"
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "clh1abc...",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
 }
+```
+
+### Create Contract
+
+**Request:**
+```bash
+curl -X POST http://localhost:5000/api/contracts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "title": "Master Service Agreement",
+    "vendor": "Microsoft",
+    "status": "Review",
+    "riskLevel": "Medium",
+    "summary": "12-month enterprise agreement",
+    "contractType": "MSA",
+    "effectiveDate": "2026-08-01",
+    "expiryDate": "2027-08-01"
+  }'
+```
+
+**Response (201):**
+```json
+{
+  "id": "clh2xyz...",
+  "userId": "clh1abc...",
+  "title": "Master Service Agreement",
+  "vendor": "Microsoft",
+  "status": "Review",
+  "riskLevel": "Medium",
+  "summary": "12-month enterprise agreement",
+  "contractType": "MSA",
+  "effectiveDate": "2026-08-01T00:00:00.000Z",
+  "expiryDate": "2027-08-01T00:00:00.000Z",
+  "pdfPath": null,
+  "createdAt": "2026-08-09T10:30:00.000Z",
+  "updatedAt": "2026-08-09T10:30:00.000Z"
+}
+```
+
+### Get Contracts
+
+**Request:**
+```bash
+curl -X GET http://localhost:5000/api/contracts \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Response (200):**
+```json
+[
+  {
+    "id": "clh2xyz...",
+    "userId": "clh1abc...",
+    "title": "Master Service Agreement",
+    ...
+  }
+]
+```
+
+### Save Chat Message
+
+**Request:**
+```bash
+curl -X POST http://localhost:5000/api/contracts/clh2xyz/chat \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "userMessage": "What is the termination clause?",
+    "aiResponse": "The contract can be terminated with 30 days notice."
+  }'
+```
+
+**Response (201):**
+```json
+{
+  "id": "clh3def...",
+  "contractId": "clh2xyz...",
+  "userMessage": "What is the termination clause?",
+  "aiResponse": "The contract can be terminated with 30 days notice.",
+  "timestamp": "2026-08-09T10:35:00.000Z"
+}
+```
+
+## Available npm Scripts
+
+```bash
+# Development with auto-reload
+npm run dev
+
+# Build TypeScript to JavaScript
+npm run build
+
+# Run compiled application
+npm start
+
+# Generate Prisma client
+npm run prisma:generate
+
+# Run database migrations
+npm run prisma:migrate
+
+# Open Prisma Studio (visual database editor)
+npm run prisma:studio
+
+# Reset database (WARNING: deletes all data)
+npm run prisma:reset
+```
+
+## Database Schema
+
+### Users Table
+```
+id          String  @id @default(cuid())
+name        String
+email       String  @unique
+password    String  (hashed)
+contracts   Contract[]
+createdAt   DateTime @default(now())
+updatedAt   DateTime @updatedAt
+```
+
+### Contracts Table
+```
+id              String  @id @default(cuid())
+userId          String  (FK to users.id)
+title           String
+vendor          String
+status          String
+riskLevel       String
+summary         String? (optional)
+contractType    String
+effectiveDate   DateTime
+expiryDate      DateTime
+pdfPath         String? (optional)
+chatHistory     ChatHistory[]
+createdAt       DateTime @default(now())
+updatedAt       DateTime @updatedAt
+```
+
+### ChatHistory Table
+```
+id              String  @id @default(cuid())
+contractId      String  (FK to contracts.id)
+userMessage     String
+aiResponse      String
+timestamp       DateTime @default(now())
 ```
 
 ## Security
 
-- **Passwords**: Hashed using BCrypt
-- **Authentication**: JWT (JSON Web Token)
-- **CORS**: Enabled for frontend (localhost:3000)
-- **Session**: Stateless (no sessions, only tokens)
+### Password Security
+- Passwords are hashed using bcrypt with 10 salt rounds
+- Original password never stored
+- Compared during login using bcrypt.compare()
 
-### Security Features
+### JWT Authentication
+- Token generated on successful login/registration
+- Expires after 7 days (configurable)
+- Verified on protected endpoints
+- Secret stored in environment variable
 
-1. **Password Security**
-   - Passwords are hashed using BCrypt
-   - Original password never stored
+### User Ownership
+- Users can only access their own contracts
+- Users can only access chat history for their contracts
+- Verified in database queries with userId filter
 
-2. **JWT Token**
-   - Token expires after 24 hours (configurable)
-   - Contains user ID and email
-   - Signed with secret key
-
-3. **CORS Configuration**
-   - Allows requests from http://localhost:3000
-   - Allows requests from http://localhost:3001
-   - Credentials supported
-
-4. **Protected Endpoints**
-   - `/api/auth/me` - Requires valid JWT token
-   - Only public endpoints: `/api/auth/register`, `/api/auth/login`
+### CORS
+- Enabled for frontend URLs (localhost:3000, localhost:3001)
+- Credentials supported
+- Specific methods allowed: GET, POST, PUT, DELETE, PATCH
 
 ## Error Handling
 
-The API returns meaningful error messages:
+The API returns consistent error responses:
 
 ```json
 {
-  "timestamp": "2026-07-22T10:30:00",
-  "status": 400,
-  "message": "User with this email already exists",
-  "path": "/api/auth/register"
+  "message": "Error description"
 }
 ```
 
-## Testing with cURL
+**Common Status Codes:**
+- `200` - Success
+- `201` - Created
+- `204` - No Content (successful delete)
+- `400` - Bad Request (validation error)
+- `401` - Unauthorized (authentication failed)
+- `404` - Not Found
+- `500` - Server Error
 
-### Register
+## Testing
+
+### Quick Test Flow
+
+1. **Register a user:**
 ```bash
-curl -X POST http://localhost:8080/api/auth/register \
+curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "John",
-    "email": "john@example.com",
-    "password": "password123"
-  }'
+  -d '{"name":"Test User","email":"test@example.com","password":"password123"}'
 ```
 
-### Login
+2. **Copy the token from response**
+
+3. **Create a contract:**
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:5000/api/contracts \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "password123"
-  }'
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"title":"Test Contract","vendor":"Test Co","status":"Review","riskLevel":"Low","contractType":"MSA","effectiveDate":"2026-08-01","expiryDate":"2027-08-01"}'
 ```
 
-### Get Current User (Protected)
+4. **Get contracts:**
 ```bash
-curl -X GET http://localhost:8080/api/auth/me \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+curl -X GET http://localhost:5000/api/contracts \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-## Frontend Integration
+Use Postman or Insomnia for easier testing with UI.
 
-See [`FRONTEND_INTEGRATION.md`](./FRONTEND_INTEGRATION.md) for how to connect your Next.js frontend to these APIs.
+## Troubleshooting
 
-## Common Issues
+### Database Connection Error
+```
+Error: connect ECONNREFUSED 127.0.0.1:5432
+```
+**Solution:** 
+- Ensure PostgreSQL is running
+- Check DATABASE_URL in .env
+- Verify port 5432 is correct
 
-### Issue: PostgreSQL connection refused
-**Solution:** Ensure PostgreSQL is running and accessible at localhost:5432
+### Port Already in Use
+```
+Error: listen EADDRINUSE: address already in use :::5000
+```
+**Solution:**
+- Change PORT in .env
+- Or kill process using port: `lsof -i :5000` (Mac/Linux)
 
-### Issue: Table not found
-**Solution:** The tables are created automatically with `spring.jpa.hibernate.ddl-auto=update`
+### JWT Token Errors
+```
+Error: Invalid or expired token
+```
+**Solution:**
+- Ensure Authorization header format is `Bearer TOKEN`
+- Check token hasn't expired (7 days default)
+- Verify JWT_SECRET matches between generation and verification
 
-### Issue: CORS errors in frontend
-**Solution:** Ensure the frontend URL is in the CORS allowed origins in `SecurityConfig.java`
-
-### Issue: 401 Unauthorized on protected endpoints
-**Solution:** Ensure you're sending the JWT token in the Authorization header: `Bearer YOUR_TOKEN`
+### Prisma Migration Issues
+```
+Error: Migrations have failed
+```
+**Solution:**
+- Run: `npm run prisma:reset` (deletes data!)
+- Or manually fix schema.prisma conflicts
 
 ## Production Deployment
 
 Before deploying to production:
 
-1. **Change JWT Secret**: Use a strong, random string
-2. **Update Database**: Use a managed PostgreSQL instance
-3. **Enable HTTPS**: Set up SSL/TLS certificates
-4. **Update CORS**: Use your actual domain instead of localhost
-5. **Set Environment Variables**: Use environment variables for sensitive configs
-6. **Enable Logging**: Configure appropriate log levels
-
-## Database Schema
-
-### Users Table
-```sql
-CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-## Dependencies
-
-Key dependencies in pom.xml:
-- Spring Boot Web Starter
-- Spring Data JPA
-- Spring Security
-- PostgreSQL JDBC Driver
-- JJWT (JWT library)
-- Lombok
-- Validation
+1. **Change JWT_SECRET** - Use a strong random string
+2. **Update DATABASE_URL** - Use managed PostgreSQL service
+3. **Set NODE_ENV=production**
+4. **Enable HTTPS** - Use SSL/TLS certificates
+5. **Update CORS origins** - Use actual domain
+6. **Run migrations** - `npm run prisma:migrate -- --skip-generate`
+7. **Build project** - `npm run build`
+8. **Start with** - `npm start`
 
 ## License
 
@@ -286,6 +521,6 @@ MIT License - See LICENSE file for details
 
 ---
 
-**Created**: July 2026
-**Version**: 1.0.0
+**Backend Version**: 1.0.0  
+**Last Updated**: July 2026  
 **Status**: Production Ready

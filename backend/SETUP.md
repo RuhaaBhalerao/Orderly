@@ -1,392 +1,566 @@
-# Spring Boot Backend Setup Guide
-
-Complete setup instructions for Procure AI Spring Boot backend.
-
-## ✅ What's Included
-
-- ✅ Complete Spring Boot 3.2 project
-- ✅ User authentication with JWT
-- ✅ PostgreSQL database integration
-- ✅ BCrypt password hashing
-- ✅ CORS configuration for frontend
-- ✅ Exception handling
-- ✅ Constructor injection
-- ✅ Maven build configuration
-- ✅ Production-ready security
-
-## 📋 Prerequisites
-
-Before starting, ensure you have:
-
-1. **Java 21** - Download from [oracle.com](https://www.oracle.com/java/technologies/downloads/)
-2. **PostgreSQL** - Download from [postgresql.org](https://www.postgresql.org/download/)
-3. **Maven** - Download from [maven.apache.org](https://maven.apache.org/download.cgi)
-4. **Git** - Download from [git-scm.com](https://git-scm.com/)
-5. **IDE** - IntelliJ IDEA, VS Code, or Eclipse
-
-## 🚀 Quick Start (5 minutes)
-
-### Step 1: Create PostgreSQL Database
-
-```sql
--- Connect to PostgreSQL
-psql -U postgres
-
--- Create database
-CREATE DATABASE procure_ai;
-
--- Create user (optional)
-CREATE USER procure_user WITH ENCRYPTED PASSWORD 'procure_password';
-GRANT ALL PRIVILEGES ON DATABASE procure_ai TO procure_user;
-```
-
-Or use pgAdmin GUI if you prefer.
-
-### Step 2: Configure Backend
-
-Edit `backend/src/main/resources/application.properties`:
-
-```properties
-# Change these values to match your PostgreSQL setup
-spring.datasource.url=jdbc:postgresql://localhost:5432/procure_ai
-spring.datasource.username=postgres
-spring.datasource.password=your_password
-
-# Change JWT secret to something long and random
-jwt.secret=your-super-secret-key-at-least-32-characters-long-change-this-in-production
-```
-
-### Step 3: Build and Run
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Build with Maven
-mvn clean install
-
-# Run the application
-mvn spring-boot:run
-```
-
-Backend will start at: **http://localhost:8080**
-
-You should see:
-```
-Started ProcureAiApplication in X.XXX seconds
-```
-
-## 📁 Project Structure
-
-```
-backend/
-├── src/main/java/com/procureai/
-│   ├── controller/
-│   │   └── AuthController.java          ← REST endpoints
-│   ├── service/
-│   │   └── AuthService.java             ← Business logic
-│   ├── repository/
-│   │   └── UserRepository.java          ← Database queries
-│   ├── model/
-│   │   └── User.java                    ← Entity/Table
-│   ├── security/
-│   │   ├── JwtTokenProvider.java        ← Token generation
-│   │   └── JwtAuthenticationFilter.java ← Token validation
-│   ├── config/
-│   │   └── SecurityConfig.java          ← Security rules
-│   ├── dto/
-│   │   ├── AuthRequest.java             ← Register request
-│   │   ├── LoginRequest.java            ← Login request
-│   │   └── AuthResponse.java            ← Response object
-│   ├── exception/
-│   │   └── GlobalExceptionHandler.java  ← Error handling
-│   └── ProcureAiApplication.java        ← Main entry point
-│
-├── src/main/resources/
-│   └── application.properties           ← Configuration
-│
-├── pom.xml                              ← Maven dependencies
-├── README.md                            ← Project info
-├── SETUP.md                             ← This file
-└── FRONTEND_INTEGRATION.md              ← Frontend connection
-```
-
-## 🔧 Key Configuration Files
-
-### `application.properties`
-
-```properties
-# Server
-server.port=8080
-
-# Database
-spring.datasource.url=jdbc:postgresql://localhost:5432/procure_ai
-spring.datasource.username=postgres
-spring.datasource.password=password
-
-# Hibernate (auto-creates tables)
-spring.jpa.hibernate.ddl-auto=update
-
-# JWT
-jwt.secret=your-secret-key
-jwt.expiration=86400000  # 24 hours in milliseconds
-```
-
-### `pom.xml`
-
-Main dependencies:
-- Spring Boot Web
-- Spring Data JPA
-- Spring Security
-- PostgreSQL Driver
-- JJWT (JWT)
-- Lombok
-- Validation
-
-## 🔐 Security Configuration
-
-### JWT Token Flow
-
-```
-1. User login with email/password
-2. Backend validates credentials
-3. Backend creates JWT token with user ID
-4. Frontend stores token in localStorage
-5. Frontend sends token in Authorization header
-6. Backend validates token on each request
-```
-
-### Endpoints
-
-| Method | Endpoint | Protected | Purpose |
-|--------|----------|-----------|---------|
-| POST | /api/auth/register | ❌ No | Register new user |
-| POST | /api/auth/login | ❌ No | Login user |
-| GET | /api/auth/me | ✅ Yes | Get current user |
-
-### CORS Configuration
-
-Allowed origins:
-- http://localhost:3000 (Next.js frontend)
-- http://localhost:3001 (Alternative port)
-- http://127.0.0.1:3000
-
-Modify in `SecurityConfig.java` if needed.
-
-## 🧪 Testing
-
-### Test Register
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "John Doe",
-    "email": "john@example.com",
-    "password": "password123"
-  }'
-```
-
-### Test Login
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "password123"
-  }'
-```
-
-Copy the `token` from response.
-
-### Test Protected Endpoint
-```bash
-curl -X GET http://localhost:8080/api/auth/me \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
-```
-
-## 📊 Database Schema
-
-Tables created automatically:
-
-### Users Table
-```sql
-CREATE TABLE users (
-    id UUID PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP
-);
-```
-
-## 🔄 Development Workflow
-
-### Make Changes
-1. Edit Java files in `src/main/java/com/procureai/`
-2. Save the file
-3. Dev tools will auto-reload the application
-4. Test changes with curl or Postman
-
-### Common Tasks
-
-**Add new endpoint:**
-1. Create method in `AuthController`
-2. Implement logic in `AuthService`
-3. Test with curl
-
-**Add new database field:**
-1. Add field to `User.java` entity
-2. Hibernate creates migration automatically
-3. Test with login
-
-**Change security rules:**
-1. Edit `SecurityConfig.java`
-2. Update `authorizeHttpRequests` rules
-3. Restart application
-
-## 🐛 Troubleshooting
-
-### Issue: Connection refused to PostgreSQL
-```
-Error: Connection refused
-```
-**Solution:**
-- Ensure PostgreSQL is running
-- Check database URL in application.properties
-- Verify database exists: `psql -l`
-
-### Issue: Table not found
-```
-Error: relation "users" does not exist
-```
-**Solution:**
-- Ensure `spring.jpa.hibernate.ddl-auto=update` is set
-- Delete existing database and recreate
-- Check PostgreSQL logs
-
-### Issue: CORS error in browser
-```
-Access to XMLHttpRequest blocked by CORS policy
-```
-**Solution:**
-- Verify frontend URL is in CORS allowed origins
-- Check `SecurityConfig.java` cors configuration
-- Restart backend after changes
-
-### Issue: 401 Unauthorized
-```
-Status: 401
-```
-**Solution:**
-- Ensure JWT token is included in header
-- Verify token hasn't expired (24 hours)
-- Test with `/api/auth/login` first to get token
-
-### Issue: Build fails
-```
-BUILD FAILURE
-```
-**Solutions:**
-- Ensure Java 21 is installed: `java -version`
-- Clear Maven cache: `mvn clean`
-- Update Maven: `mvn -v`
-- Check internet connection for dependencies
-
-## 📦 Maven Commands
-
-```bash
-# Build project
-mvn clean install
-
-# Run application
-mvn spring-boot:run
-
-# Run tests
-mvn test
-
-# Skip tests during build
-mvn clean install -DskipTests
-
-# Create JAR file
-mvn clean package
-
-# View dependencies
-mvn dependency:tree
-```
-
-## 🚢 Running JAR File
-
-After building:
-```bash
-# Run JAR directly
-java -jar target/procure-ai-backend-1.0.0.jar
-
-# Run with custom properties
-java -jar target/procure-ai-backend-1.0.0.jar \
-  --spring.datasource.password=your_password \
-  --jwt.secret=your-secret
-```
-
-## 🌐 Connect Frontend
-
-See `FRONTEND_INTEGRATION.md` for complete frontend integration guide.
-
-Quick summary:
-1. Add `NEXT_PUBLIC_API_URL=http://localhost:8080/api` to frontend `.env.local`
-2. Create `lib/api.ts` with fetch functions
-3. Update Login page to call backend
-4. Test register and login
-
-## 📚 Next Steps
-
-1. ✅ Backend setup complete
-2. ✅ Database configured
-3. ✅ Authentication working
-4. → Connect frontend (see FRONTEND_INTEGRATION.md)
-5. → Add contract endpoints
-6. → Add AI service integration
-7. → Deploy to production
-
-## 🔑 Important Notes
-
-### Security
-- **Never commit `application.properties`** with real credentials
-- **Change JWT secret** before production
-- **Use strong passwords** in database
-- **Enable HTTPS** in production
-- **Validate all user input**
-
-### Performance
-- **Connection pooling** configured automatically
-- **Database indexing** on email (unique constraint)
-- **Lazy loading** enabled for JPA
-- **Query caching** available
-
-### Monitoring
-- Debug logs enabled in development
-- All requests logged
-- Error details in response
-- Check `target/logs` for application logs
-
-## 📞 Support
-
-If you encounter issues:
-1. Check the Troubleshooting section above
-2. Review backend README.md
-3. Check Spring Boot logs
-4. Review application.properties settings
-
-## 📖 Resources
-
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-- [Spring Security Documentation](https://spring.io/projects/spring-security)
-- [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
-- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [JWT Documentation](https://jwt.io/)
+# Backend Setup Guide - Node.js + Express + Prisma
+
+Complete step-by-step guide to set up and run the Procure AI Node.js backend.
+
+## Table of Contents
+
+1. [Prerequisites](#prerequisites)
+2. [Installation](#installation)
+3. [Configuration](#configuration)
+4. [Database Setup](#database-setup)
+5. [Running the Backend](#running-the-backend)
+6. [Verification](#verification)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
-**Setup Complete!** 🎉
+## Prerequisites
 
-Your Spring Boot backend is ready. Next: [Connect your frontend](./FRONTEND_INTEGRATION.md)
+Before you begin, ensure you have installed:
+
+### 1. Node.js & npm
+
+**macOS:**
+```bash
+brew install node
+```
+
+**Windows:**
+- Download from [nodejs.org](https://nodejs.org)
+- Run installer (includes npm)
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install nodejs npm
+```
+
+**Verify installation:**
+```bash
+node --version  # Should be 18.x or higher
+npm --version   # Should be 9.x or higher
+```
+
+### 2. PostgreSQL
+
+**macOS:**
+```bash
+brew install postgresql
+brew services start postgresql
+```
+
+**Windows:**
+- Download from [postgresql.org](https://www.postgresql.org/download/windows/)
+- Run installer
+- Note the password you set for `postgres` user
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo service postgresql start
+```
+
+**Verify installation:**
+```bash
+psql --version  # Should show PostgreSQL version
+```
+
+### 3. Git
+
+**macOS:**
+```bash
+brew install git
+```
+
+**Windows/Linux:**
+- Download from [git-scm.com](https://git-scm.com)
+- Or use system package manager
+
+---
+
+## Installation
+
+### Step 1: Navigate to Backend Directory
+
+```bash
+cd backend
+```
+
+### Step 2: Install Dependencies
+
+```bash
+npm install
+```
+
+This installs all packages from package.json:
+- express - Web framework
+- @prisma/client - Database client
+- jsonwebtoken - JWT authentication
+- bcrypt - Password hashing
+- cors - CORS handling
+- express-validator - Input validation
+- dotenv - Environment variables
+- TypeScript and dev tools
+
+### Step 3: Verify Installation
+
+```bash
+npm list --depth=0
+```
+
+Should show all main dependencies installed.
+
+---
+
+## Configuration
+
+### Step 1: Create .env File
+
+```bash
+# Copy from template
+cp .env.example .env
+```
+
+### Step 2: Edit .env
+
+Open `.env` in your text editor and configure:
+
+```bash
+# Database Connection String
+DATABASE_URL="postgresql://username:password@localhost:5432/procure_ai"
+
+# JWT Configuration
+JWT_SECRET="your-super-secret-jwt-key-at-least-32-characters"
+JWT_EXPIRES_IN="7d"
+
+# Server Configuration
+PORT=5000
+NODE_ENV="development"
+
+# Frontend URL (for CORS)
+FRONTEND_URL="http://localhost:3000"
+```
+
+**Important:**
+- Replace `username` and `password` with your PostgreSQL credentials
+- Change `JWT_SECRET` to a random string (use `openssl rand -base64 32`)
+- Never commit `.env` to git
+
+### Step 3: Verify .env
+
+```bash
+# Check that .env file exists and has content
+cat .env
+```
+
+---
+
+## Database Setup
+
+### Step 1: Create PostgreSQL Database
+
+**Option A: Using psql (command line)**
+
+```bash
+# Connect to PostgreSQL
+psql -U postgres
+
+# In psql shell, create database
+CREATE DATABASE procure_ai;
+
+# Exit psql
+\q
+```
+
+**Option B: Using pgAdmin (GUI)**
+
+1. Open pgAdmin
+2. Right-click "Databases"
+3. Select "Create" → "Database"
+4. Name: `procure_ai`
+5. Click Save
+
+**Option C: Using DBeaver (GUI)**
+
+1. Open DBeaver
+2. Right-click on PostgreSQL connection
+3. Select "Create New Database"
+4. Name: `procure_ai`
+5. Click OK
+
+### Step 2: Verify Database Connection
+
+```bash
+# Test connection
+psql -U postgres -d procure_ai
+
+# If connected, you should see:
+# procure_ai=>
+
+# Exit
+\q
+```
+
+### Step 3: Generate Prisma Client
+
+```bash
+npm run prisma:generate
+```
+
+This generates the Prisma client in `node_modules/@prisma/client`.
+
+### Step 4: Run Migrations
+
+```bash
+npm run prisma:migrate
+```
+
+This:
+1. Creates migration files
+2. Applies schema to database
+3. Creates tables: users, contracts, chat_history
+
+You'll be prompted:
+```
+✔ Enter a name for this migration: › init
+```
+
+Type a name like `init` or `create_tables` and press Enter.
+
+### Step 5: Verify Database Schema
+
+**Option A: Using Prisma Studio (GUI)**
+
+```bash
+npm run prisma:studio
+```
+
+Opens browser at `http://localhost:5555` to view/edit database.
+
+**Option B: Using psql**
+
+```bash
+psql -U postgres -d procure_ai
+
+# List tables
+\dt
+
+# Describe users table
+\d users
+
+# Exit
+\q
+```
+
+Should see:
+```
+         List of relations
+ Schema | Name | Type  | Owner
+--------+------+-------+-------
+ public | users | table | postgres
+ public | contracts | table | postgres
+ public | chat_history | table | postgres
+```
+
+---
+
+## Running the Backend
+
+### Option 1: Development Mode (Recommended for Development)
+
+```bash
+npm run dev
+```
+
+Features:
+- Auto-reloads on code changes
+- TypeScript watch mode
+- Shows full logs
+- Accessible at `http://localhost:5000`
+
+Expected output:
+```
+╔══════════════════════════════════════════════════════════╗
+║       Procure AI Backend - Node.js + Express             ║
+╠══════════════════════════════════════════════════════════╣
+║ Server running on port 5000                              ║
+║ Environment: development                                 ║
+║ Frontend URL: http://localhost:3000                      ║
+║ Database: PostgreSQL                                     ║
+║ API Health: http://localhost:5000/health               ║
+╚══════════════════════════════════════════════════════════╝
+```
+
+### Option 2: Production Build
+
+```bash
+# Compile TypeScript
+npm run build
+
+# Run compiled JavaScript
+npm start
+```
+
+Runs compiled version from `dist/` directory.
+
+---
+
+## Verification
+
+### Test 1: Health Check
+
+```bash
+curl http://localhost:5000/health
+```
+
+Expected response:
+```json
+{"status":"ok","message":"Backend is running"}
+```
+
+### Test 2: Register User
+
+```bash
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Test User",
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+```
+
+Expected response (201):
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "clh1abc...",
+    "name": "Test User",
+    "email": "test@example.com"
+  }
+}
+```
+
+### Test 3: Login
+
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "test@example.com",
+    "password": "password123"
+  }'
+```
+
+Same response with token.
+
+### Test 4: Protected Endpoint
+
+Save token from previous response, then:
+
+```bash
+curl -X GET http://localhost:5000/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Expected response (200):
+```json
+{
+  "id": "clh1abc...",
+  "name": "Test User",
+  "email": "test@example.com"
+}
+```
+
+### Test 5: Create Contract
+
+```bash
+curl -X POST http://localhost:5000/api/contracts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "title": "Test Contract",
+    "vendor": "Test Company",
+    "status": "Review",
+    "riskLevel": "Medium",
+    "contractType": "MSA",
+    "effectiveDate": "2026-08-01",
+    "expiryDate": "2027-08-01"
+  }'
+```
+
+Expected response (201) with contract details.
+
+---
+
+## Using Postman (Recommended for Testing)
+
+1. **Download Postman** from [postman.com](https://www.postman.com/downloads/)
+
+2. **Import Collection:**
+   - Create new Collection: "Procure AI"
+
+3. **Create Requests:**
+
+   **Register:**
+   - Method: POST
+   - URL: `http://localhost:5000/api/auth/register`
+   - Body (JSON):
+   ```json
+   {
+     "name": "John Doe",
+     "email": "john@example.com",
+     "password": "password123"
+   }
+   ```
+
+   **Login:**
+   - Method: POST
+   - URL: `http://localhost:5000/api/auth/login`
+   - Body (JSON):
+   ```json
+   {
+     "email": "john@example.com",
+     "password": "password123"
+   }
+   ```
+
+   **Get Me (with Auth):**
+   - Method: GET
+   - URL: `http://localhost:5000/api/auth/me`
+   - Headers: `Authorization: Bearer {{token}}`
+
+4. **Use Variables:**
+   - Set token as collection variable
+   - Use `{{token}}` in requests
+
+---
+
+## Troubleshooting
+
+### Issue: "Cannot find module 'express'"
+
+**Solution:**
+```bash
+npm install
+npm run prisma:generate
+```
+
+### Issue: "Connection refused at 127.0.0.1:5432"
+
+PostgreSQL is not running.
+
+**Solution:**
+
+**macOS:**
+```bash
+brew services start postgresql
+```
+
+**Windows:**
+- Open Services (services.msc)
+- Find "PostgreSQL"
+- Right-click → Start
+
+**Linux:**
+```bash
+sudo systemctl start postgresql
+```
+
+### Issue: "Database does not exist"
+
+The `procure_ai` database wasn't created.
+
+**Solution:**
+```bash
+psql -U postgres
+CREATE DATABASE procure_ai;
+\q
+```
+
+### Issue: "Invalid DATABASE_URL format"
+
+Check .env file syntax.
+
+**Correct format:**
+```
+postgresql://username:password@localhost:5432/database_name
+```
+
+### Issue: "EADDRINUSE: address already in use :::5000"
+
+Another process is using port 5000.
+
+**Solution:**
+
+**macOS/Linux:**
+```bash
+# Find process using port 5000
+lsof -i :5000
+
+# Kill process
+kill -9 <PID>
+```
+
+**Windows:**
+```bash
+# Find process
+netstat -ano | findstr :5000
+
+# Kill process
+taskkill /PID <PID> /F
+
+# Or use different port in .env
+PORT=5001
+```
+
+### Issue: "Unexpected token < in JSON at position 0"
+
+API returned HTML error page instead of JSON. Server likely crashed.
+
+**Solution:**
+- Check console for error messages
+- Verify all dependencies installed
+- Check .env configuration
+
+### Issue: "JWT malformed"
+
+Token format is incorrect.
+
+**Solution:**
+- Ensure Authorization header is: `Bearer TOKEN` (with space)
+- Not: `BearerTOKEN` or just `TOKEN`
+
+---
+
+## Environment Variables Reference
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | Required | PostgreSQL connection string |
+| `JWT_SECRET` | Required | Secret key for signing JWTs |
+| `JWT_EXPIRES_IN` | `7d` | Token expiration time |
+| `PORT` | `5000` | Server port |
+| `NODE_ENV` | `development` | Environment mode |
+| `FRONTEND_URL` | `http://localhost:3000` | Frontend origin for CORS |
+
+---
+
+## Next Steps
+
+After setup:
+
+1. ✅ Backend running at http://localhost:5000
+2. ✅ Database connected with tables created
+3. ✅ Authentication working
+4. ✅ Contracts API functional
+5. Next: Start frontend development
+
+See `FRONTEND_INTEGRATION.md` for connecting the Next.js frontend.
+
+---
+
+**Setup Guide Version**: 1.0  
+**Last Updated**: July 2026
