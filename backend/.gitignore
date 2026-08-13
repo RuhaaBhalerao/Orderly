@@ -31,3 +31,7 @@ yarn-debug.log*
 
 # OS
 Thumbs.db
+
+# Uploads - DO NOT commit user files
+uploads/
+

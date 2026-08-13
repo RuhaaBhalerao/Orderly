@@ -1,14 +1,19 @@
 import 'dotenv/config';
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import path from 'path';
 import authRoutes from './routes/authRoutes';
 import contractRoutes from './routes/contractRoutes';
 import chatRoutes from './routes/chatRoutes';
 import { errorMiddleware } from './middleware/errorMiddleware';
+import { ensureUploadDirectory } from './middleware/uploadMiddleware';
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
+// Initialize upload directory
+ensureUploadDirectory().catch((err) => console.error('Failed to initialize upload directory:', err));
 
 // Middleware
 app.use(express.json());
@@ -23,6 +28,9 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+// Serve static uploads
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -53,6 +61,7 @@ app.listen(PORT, () => {
 ║ Frontend URL: ${FRONTEND_URL}                   ║
 ║ Database: PostgreSQL                                     ║
 ║ API Health: http://localhost:${PORT}/health            ║
+║ Uploads: /uploads/contracts/                            ║
 ╚══════════════════════════════════════════════════════════╝
   `);
 });

@@ -35,6 +35,8 @@ model Contract {
   effectiveDate   DateTime
   expiryDate      DateTime
   pdfPath         String?
+  fileName        String?  // original PDF filename
+  extractedText   String?  @db.Text  // text extracted from PDF
   chatHistory     ChatHistory[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

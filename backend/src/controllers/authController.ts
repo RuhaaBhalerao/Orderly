@@ -16,8 +16,8 @@ export async function registerController(
     if (!errors.isEmpty()) {
       res.status(400).json({
         message: 'Validation failed',
-        errors: errors.array().reduce((acc, err) => {
-          acc[err.param] = err.msg;
+        errors: errors.array().reduce((acc, err: any) => {
+          acc[err.param || 'unknown'] = err.msg;
           return acc;
         }, {} as Record<string, string>),
       });
@@ -50,8 +50,8 @@ export async function loginController(
     if (!errors.isEmpty()) {
       res.status(400).json({
         message: 'Validation failed',
-        errors: errors.array().reduce((acc, err) => {
-          acc[err.param] = err.msg;
+        errors: errors.array().reduce((acc, err: any) => {
+          acc[err.param || 'unknown'] = err.msg;
           return acc;
         }, {} as Record<string, string>),
       });

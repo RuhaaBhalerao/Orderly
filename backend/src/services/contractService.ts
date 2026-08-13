@@ -137,4 +137,19 @@ export async function deleteContract(contractId: string, userId: string) {
   await prisma.contract.delete({
     where: { id: contractId },
   });
+
+  // Delete associated PDF file if it exists
+  if (contract.pdfPath) {
+    try {
+      // Extract filename from pdfPath (e.g., /uploads/contracts/uuid.pdf -> uuid.pdf)
+      const filename = contract.pdfPath.split('/').pop();
+      if (filename) {
+        const { deleteUploadedFile } = await import('../middleware/uploadMiddleware');
+        await deleteUploadedFile(filename);
+      }
+    } catch (error) {
+      console.error('Error deleting PDF file:', error);
+      // Don't throw - contract was already deleted from DB
+    }
+  }
 }
