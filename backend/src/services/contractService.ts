@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import { AiAnalysisResponse } from '../types/aiAnalysis';
 
 export interface CreateContractPayload {
   title: string;
@@ -112,6 +113,51 @@ export async function updateContract(
   });
 
   return updated;
+}
+
+/**
+ * Save contract analysis results
+ * Updates contract with AI-extracted data
+ */
+export async function saveContractAnalysis(
+  contractId: string,
+  analysis: AiAnalysisResponse
+) {
+  const updated = await prisma.contract.update({
+    where: { id: contractId },
+    data: {
+      aiSummary: analysis.summary,
+      aiContractType: analysis.contractType,
+      aiVendor: analysis.vendor,
+      aiEffectiveDate: analysis.effectiveDate ? new Date(analysis.effectiveDate) : null,
+      aiExpiryDate: analysis.expiryDate ? new Date(analysis.expiryDate) : null,
+      aiRiskLevel: analysis.riskLevel,
+      aiKeyTerms: analysis.keyTerms,
+      aiRisks: analysis.risks,
+      aiRecommendations: analysis.recommendations,
+      analysisStatus: 'COMPLETED',
+      analysisError: null,
+    },
+  });
+
+  return updated;
+}
+
+/**
+ * Update contract analysis status
+ */
+export async function updateContractAnalysisStatus(
+  contractId: string,
+  status: 'PENDING' | 'COMPLETED' | 'FAILED',
+  error: string | null = null
+) {
+  return await prisma.contract.update({
+    where: { id: contractId },
+    data: {
+      analysisStatus: status,
+      analysisError: error,
+    },
+  });
 }
 
 /**

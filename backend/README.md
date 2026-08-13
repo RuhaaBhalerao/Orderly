@@ -31,7 +31,21 @@ Node.js + Express + TypeScript backend for Procure AI - AI-powered Contract Inte
 - ✅ Delete contracts
 - ✅ User ownership verification
 
-### Phase 3: Chat History
+### Phase 3: PDF Upload & Text Extraction
+- ✅ PDF upload with file validation
+- ✅ Automatic text extraction from PDFs
+- ✅ File storage management
+- ✅ Secure filename handling
+
+### Phase 4: AI Contract Analysis
+- ✅ OpenRouter AI integration
+- ✅ Contract summarization
+- ✅ Key information extraction
+- ✅ Risk analysis and identification
+- ✅ Structured JSON responses
+- ✅ Analysis status tracking
+
+### Phase 5: Chat History
 - ✅ Save chat messages (user + AI response)
 - ✅ Retrieve chat history for contracts
 - ✅ Timestamp tracking
@@ -124,6 +138,8 @@ cp .env.example .env
 # - JWT_SECRET
 # - PORT (optional, defaults to 5000)
 # - FRONTEND_URL (optional, defaults to http://localhost:3000)
+# - OPENROUTER_API_KEY (Phase 4: for AI analysis)
+# - OPENROUTER_MODEL (Phase 4: AI model selection)
 ```
 
 **Example .env file:**
@@ -134,7 +150,33 @@ JWT_EXPIRES_IN="7d"
 PORT=5000
 NODE_ENV="development"
 FRONTEND_URL="http://localhost:3000"
+OPENROUTER_API_KEY="sk-or-v1-xxxxx" # Phase 4: Get from openrouter.ai
+OPENROUTER_MODEL="google/gemma-3-27b-it"
 ```
+
+#### Phase 4: OpenRouter Setup (AI Analysis)
+
+1. **Create OpenRouter Account:**
+   - Go to [openrouter.ai](https://openrouter.ai)
+   - Sign up with email or OAuth
+
+2. **Get API Key:**
+   - Navigate to "Keys" section
+   - Create new API key
+   - Copy the key (starts with `sk-or-v1-`)
+
+3. **Add to .env:**
+   ```
+   OPENROUTER_API_KEY="sk-or-v1-your-key-here"
+   OPENROUTER_MODEL="google/gemma-3-27b-it"
+   ```
+
+4. **Available Models (as of Aug 2026):**
+   - `google/gemma-3-27b-it` - Free, recommended
+   - `openrouter/auto` - Automatically picks best model
+   - `meta-llama/llama-3.1-405b-instruct` - Premium
+   
+   Current setup uses: **google/gemma-3-27b-it** (free tier)
 
 ### 4. Database Migration
 
@@ -187,6 +229,8 @@ You should see:
 | GET | `/api/contracts` | ✅ | List all user contracts |
 | GET | `/api/contracts/:id` | ✅ | Get contract details |
 | POST | `/api/contracts` | ✅ | Create contract |
+| POST | `/api/contracts/upload` | ✅ | Upload PDF contract |
+| POST | `/api/contracts/:id/analyze` | ✅ | Analyze contract with AI |
 | PUT | `/api/contracts/:id` | ✅ | Update contract |
 | DELETE | `/api/contracts/:id` | ✅ | Delete contract |
 
@@ -330,6 +374,60 @@ curl -X POST http://localhost:5000/api/contracts/clh2xyz/chat \
 }
 ```
 
+### Analyze Contract (Phase 4)
+
+**Request:**
+```bash
+curl -X POST http://localhost:5000/api/contracts/clh2xyz/analyze \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Response (200):**
+```json
+{
+  "message": "Contract analyzed successfully",
+  "analysis": {
+    "summary": "12-month Master Service Agreement with Microsoft for cloud services...",
+    "contractType": "MSA",
+    "vendor": "Microsoft",
+    "effectiveDate": "2026-08-01",
+    "expiryDate": "2027-08-01",
+    "riskLevel": "Medium",
+    "keyTerms": [
+      "Auto-renewal clause",
+      "Net 30 payment terms",
+      "30-day termination notice"
+    ],
+    "risks": [
+      {
+        "title": "Automatic Renewal",
+        "severity": "High",
+        "description": "Contract automatically renews unless notice given 60 days prior"
+      },
+      {
+        "title": "Liability Cap",
+        "severity": "Medium",
+        "description": "Liability limited to 12 months of fees paid"
+      }
+    ],
+    "recommendations": [
+      "Review the automatic renewal clause to ensure timely notice of cancellation",
+      "Negotiate lower liability cap if possible",
+      "Add specific SLA performance metrics"
+    ]
+  },
+  "textTruncated": false
+}
+```
+
+**Response if no extracted text (400):**
+```json
+{
+  "message": "Cannot analyze contract",
+  "error": "Contract does not have extracted text. Please upload a PDF first."
+}
+```
+
 ## Available npm Scripts
 
 ```bash
@@ -370,20 +468,33 @@ updatedAt   DateTime @updatedAt
 
 ### Contracts Table
 ```
-id              String  @id @default(cuid())
-userId          String  (FK to users.id)
-title           String
-vendor          String
-status          String
-riskLevel       String
-summary         String? (optional)
-contractType    String
-effectiveDate   DateTime
-expiryDate      DateTime
-pdfPath         String? (optional)
-chatHistory     ChatHistory[]
-createdAt       DateTime @default(now())
-updatedAt       DateTime @updatedAt
+id                 String  @id @default(cuid())
+userId             String  (FK to users.id)
+title              String
+vendor             String
+status             String
+riskLevel          String
+summary            String? (optional)
+contractType       String
+effectiveDate      DateTime
+expiryDate         DateTime
+pdfPath            String? (optional)
+fileName           String? (Phase 3)
+extractedText      String? (Phase 3)
+aiSummary          String? (Phase 4)
+aiContractType     String? (Phase 4)
+aiVendor           String? (Phase 4)
+aiEffectiveDate    DateTime? (Phase 4)
+aiExpiryDate       DateTime? (Phase 4)
+aiRiskLevel        String? (Phase 4)
+aiKeyTerms         String[] (Phase 4)
+aiRisks            Json? (Phase 4)
+aiRecommendations  String[] (Phase 4)
+analysisStatus     String (Phase 4: PENDING|COMPLETED|FAILED)
+analysisError      String? (Phase 4)
+chatHistory        ChatHistory[]
+createdAt          DateTime @default(now())
+updatedAt          DateTime @updatedAt
 ```
 
 ### ChatHistory Table

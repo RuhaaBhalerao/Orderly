@@ -6,6 +6,7 @@ import {
   createContractController,
   updateContractController,
   deleteContractController,
+  analyzeContractController,
 } from '../controllers/contractController';
 import { uploadMiddleware } from '../middleware/uploadMiddleware';
 import { uploadContractController } from '../controllers/uploadController';
@@ -24,7 +25,7 @@ router.get('/', getContractsController);
 
 /**
  * GET /api/contracts/:id
- * Get single contract
+ * Get single contract (includes analysis if available)
  */
 router.get(
   '/:id',
@@ -77,6 +78,16 @@ router.post(
     body('summary').trim().optional(),
   ],
   uploadContractController
+);
+
+/**
+ * POST /api/contracts/:id/analyze
+ * Analyze contract using AI (Phase 4)
+ */
+router.post(
+  '/:id/analyze',
+  [param('id').notEmpty().withMessage('Contract ID is required')],
+  analyzeContractController
 );
 
 /**

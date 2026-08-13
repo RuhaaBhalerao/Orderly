@@ -23,23 +23,37 @@ model User {
 }
 
 model Contract {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title           String
-  vendor          String
-  status          String   // e.g., "Draft", "Review", "Approved", "Signed", "Expired"
-  riskLevel       String   // e.g., "Low", "Medium", "High", "Critical"
-  summary         String?  @db.Text
-  contractType    String   // e.g., "MSA", "SLA", "NDA", "Purchase Agreement"
-  effectiveDate   DateTime
-  expiryDate      DateTime
-  pdfPath         String?
-  fileName        String?  // original PDF filename
-  extractedText   String?  @db.Text  // text extracted from PDF
-  chatHistory     ChatHistory[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title                 String
+  vendor                String
+  status                String   // e.g., "Draft", "Review", "Approved", "Signed", "Expired"
+  riskLevel             String   // e.g., "Low", "Medium", "High", "Critical"
+  summary               String?  @db.Text
+  contractType          String   // e.g., "MSA", "SLA", "NDA", "Purchase Agreement"
+  effectiveDate         DateTime
+  expiryDate            DateTime
+  pdfPath               String?
+  fileName              String?  // original PDF filename
+  extractedText         String?  @db.Text  // text extracted from PDF
+  
+  // AI Analysis Fields (Phase 4)
+  aiSummary             String?  @db.Text  // AI-generated summary
+  aiContractType        String?  // AI-identified contract type
+  aiVendor              String?  // AI-identified vendor name
+  aiEffectiveDate       DateTime?  // AI-extracted effective date
+  aiExpiryDate          DateTime?  // AI-extracted expiry date
+  aiRiskLevel           String?  // AI-identified risk level (Low, Medium, High)
+  aiKeyTerms            String[]  // Array of key terms
+  aiRisks               Json?  // Array of {title, severity, description}
+  aiRecommendations     String[]  // Array of recommendations
+  analysisStatus        String  @default("PENDING")  // PENDING, COMPLETED, FAILED
+  analysisError         String?  // Error message if analysis failed
+  
+  chatHistory           ChatHistory[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@map("contracts")
 }
