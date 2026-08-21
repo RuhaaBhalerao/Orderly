@@ -1,0 +1,118 @@
+{
+  "sampleUsers": [
+    {
+      "name": "John Smith",
+      "email": "john.smith@acme-corp.com",
+      "password": "SecurePass123!",
+      "role": "Procurement Manager"
+    },
+    {
+      "name": "Sarah Johnson",
+      "email": "sarah.johnson@techcorp.io",
+      "password": "SecurePass456!",
+      "role": "Contract Manager"
+    }
+  ],
+  "sampleVendors": [
+    {
+      "name": "TechSolutions Inc",
+      "industry": "Software Services",
+      "contractType": "MSA"
+    },
+    {
+      "name": "CloudServices Ltd",
+      "industry": "Cloud Infrastructure",
+      "contractType": "SLA"
+    },
+    {
+      "name": "LegalShield Partners",
+      "industry": "Legal Services",
+      "contractType": "MSA"
+    }
+  ],
+  "sampleContracts": [
+    {
+      "title": "Annual Cloud Services Master Agreement",
+      "vendor": "CloudServices Ltd",
+      "status": "Signed",
+      "riskLevel": "Medium",
+      "contractType": "MSA",
+      "effectiveDate": "2026-01-15",
+      "expiryDate": "2027-01-15",
+      "summary": "12-month agreement for cloud infrastructure and support services"
+    },
+    {
+      "title": "Software License Agreement",
+      "vendor": "TechSolutions Inc",
+      "status": "Review",
+      "riskLevel": "Low",
+      "contractType": "MSA",
+      "effectiveDate": "2026-06-01",
+      "expiryDate": "2027-06-01",
+      "summary": "License agreement for enterprise software suite"
+    },
+    {
+      "title": "Legal Consulting Services",
+      "vendor": "LegalShield Partners",
+      "status": "Approved",
+      "riskLevel": "Low",
+      "contractType": "MSA",
+      "effectiveDate": "2026-03-01",
+      "expiryDate": "2027-03-01",
+      "summary": "On-demand legal consulting services"
+    }
+  ],
+  "sampleProcurementQuestions": [
+    "What are the key payment terms in this contract?",
+    "Are there any automatic renewal clauses?",
+    "What is the termination notice period?",
+    "What are the liability limitations?",
+    "Are there any price escalation clauses?",
+    "What is the scope of services covered?",
+    "Are there any excluded services?",
+    "What are the confidentiality obligations?",
+    "What insurance coverage is required?",
+    "What happens if we need to terminate early?"
+  ],
+  "sampleProcurementPolicy": {
+    "approvalThresholds": [
+      {
+        "amount": 10000,
+        "approver": "Manager"
+      },
+      {
+        "amount": 50000,
+        "approver": "Director"
+      },
+      {
+        "amount": 250000,
+        "approver": "VP"
+      },
+      {
+        "amount": 1000000,
+        "approver": "CFO"
+      }
+    ],
+    "mandatoryClauseReview": [
+      "Payment Terms",
+      "Liability Limitations",
+      "Termination Clauses",
+      "Confidentiality",
+      "IP Rights",
+      "Insurance Requirements",
+      "Auto-Renewal"
+    ],
+    "paymentTermsOptions": [
+      "Net 15",
+      "Net 30",
+      "Net 45",
+      "Net 60",
+      "Due on Receipt"
+    ],
+    "acceptableRiskLevels": {
+      "Low": "Approve",
+      "Medium": "Review with Legal",
+      "High": "Require Amendments"
+    }
+  }
+}

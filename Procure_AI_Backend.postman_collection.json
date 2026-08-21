@@ -1,0 +1,369 @@
+{
+  "info": {
+    "name": "Procure AI Backend - Phase 5",
+    "description": "Complete API testing collection for Procure AI backend with Phase 1-4 features",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "contractId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "test@example.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "TestPassword123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "tests",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.environment.set('token', pm.response.json().token);",
+                  "  pm.environment.set('userId', pm.response.json().user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Test User\", \"email\": \"{{email}}\", \"password\": \"{{password}}\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "tests",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  pm.environment.set('token', pm.response.json().token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"{{email}}\", \"password\": \"{{password}}\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Contracts",
+      "item": [
+        {
+          "name": "List Contracts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts"]
+            }
+          }
+        },
+        {
+          "name": "Create Contract",
+          "event": [
+            {
+              "listen": "tests",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.environment.set('contractId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Test Service Agreement\", \"vendor\": \"Test Vendor\", \"status\": \"Review\", \"riskLevel\": \"Medium\", \"contractType\": \"MSA\", \"effectiveDate\": \"2026-08-01\", \"expiryDate\": \"2027-08-01\", \"summary\": \"Test contract\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts"]
+            }
+          }
+        },
+        {
+          "name": "Get Contract",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Contract",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Updated Service Agreement\", \"vendor\": \"Test Vendor\", \"status\": \"Approved\", \"riskLevel\": \"Low\", \"contractType\": \"MSA\", \"effectiveDate\": \"2026-08-01\", \"expiryDate\": \"2027-08-01\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Contract",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 AI Analysis (Phase 4)",
+      "item": [
+        {
+          "name": "Analyze Contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}/analyze",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}", "analyze"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Error Cases",
+      "item": [
+        {
+          "name": "Missing Token",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts"]
+            }
+          }
+        },
+        {
+          "name": "Invalid Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid-token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts"]
+            }
+          }
+        },
+        {
+          "name": "Invalid JSON Body",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{invalid json"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts"]
+            }
+          }
+        },
+        {
+          "name": "Validation Error - Missing Field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"vendor\": \"Test Vendor\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Health Check",
+      "item": [
+        {
+          "name": "Server Health",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
