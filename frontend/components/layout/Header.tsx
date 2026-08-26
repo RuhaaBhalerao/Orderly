@@ -1,11 +1,13 @@
 'use client'
 
 import { useToast } from '@/lib/toast'
+import { useAuth } from '@/hooks/useAuth'
 import { Mail, RotateCw, Bell } from 'lucide-react'
 import { useState } from 'react'
 
 export function Header() {
   const { addToast } = useToast()
+  const { user } = useAuth()
   const [isSyncing, setIsSyncing] = useState(false)
 
   const handleSync = async () => {
@@ -27,7 +29,7 @@ export function Header() {
         {/* Welcome Section */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, Sarah 👋
+            Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
           </h1>
           <p className="text-base text-gray-600 mt-2">
             Here&apos;s what&apos;s happening with your procurement workflow today.
@@ -62,8 +64,14 @@ export function Header() {
           </button>
 
           {/* Profile Avatar */}
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center text-white font-bold shadow-md">
-            S
+          <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center text-white font-bold shadow-md text-xs">
+            {user?.name
+              ? user.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()
+              : 'U'}
           </div>
         </div>
       </div>

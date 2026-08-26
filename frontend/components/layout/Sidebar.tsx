@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
 import {
   Home,
   FileText,
@@ -15,6 +16,7 @@ import { cn } from '@/lib/utils'
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { user, logout } = useAuth()
 
   const navItems = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -23,7 +25,8 @@ export function Sidebar() {
     { name: 'Settings', href: '/settings', icon: Settings },
   ]
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout()
     router.push('/')
   }
 
@@ -72,8 +75,8 @@ export function Sidebar() {
       {/* User Profile & Logout */}
       <div className="p-4 border-t border-gray-100 space-y-3">
         <div className="px-4 py-3 bg-gray-50 rounded-lg">
-          <div className="font-medium text-gray-900 text-sm">Sarah Johnson</div>
-          <div className="text-xs text-gray-500 mt-0.5">Procurement Manager</div>
+          <div className="font-medium text-gray-900 text-sm">{user?.name || 'User'}</div>
+          <div className="text-xs text-gray-500 mt-0.5">{user?.email || 'No email'}</div>
         </div>
         <button
           onClick={handleLogout}

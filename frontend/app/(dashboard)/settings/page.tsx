@@ -1,11 +1,13 @@
 'use client'
 
 import { useToast } from '@/lib/toast'
+import { useAuth } from '@/hooks/useAuth'
 import { Mail, Shield, Bell, LogOut } from 'lucide-react'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/shared/Card'
 
 export default function SettingsPage() {
   const { addToast } = useToast()
+  const { user } = useAuth()
 
   const handleReconnect = () => {
     addToast('Gmail reconnection flow started', 'info')
@@ -43,7 +45,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900">
-                    sarah@acme.com
+                    {user?.email || 'No email connected'}
                   </p>
                   <p className="text-sm text-emerald-600 font-medium mt-1">
                     ● Connected
@@ -195,7 +197,7 @@ export default function SettingsPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Account Email
             </label>
-            <p className="text-gray-900 font-medium">sarah.johnson@acme.com</p>
+            <p className="text-gray-900 font-medium">{user?.email || 'No email'}</p>
           </div>
 
           <div className="border-t border-red-200 pt-6">
