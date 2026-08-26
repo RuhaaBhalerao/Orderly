@@ -14,12 +14,10 @@ export async function registerUser(payload: RegisterPayload): Promise<AuthRespon
     where: { email },
   });
 
-  if (existingUser) {
-    throw {
-      status: 400,
-      message: 'User with this email already exists',
-    };
-  }
+  if (existingUser)      throw {
+        status: 409,
+        message: 'User with this email already exists',
+      };
 
   // Hash password
   const hashedPassword = await hashPassword(password);

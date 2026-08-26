@@ -16,40 +16,56 @@ Node.js + Express + TypeScript backend for Procure AI - AI-powered Contract Inte
 
 ## Features
 
-### Phase 1: Authentication
+### Phase 1: Authentication & Security
 - ✅ User registration with email validation
 - ✅ User login with password verification
-- ✅ JWT token generation and verification
+- ✅ JWT token generation and verification (with secure secret validation)
 - ✅ Protected endpoints with authentication middleware
-- ✅ Password hashing with bcrypt
+- ✅ Password hashing with bcrypt (10 salt rounds)
+- ✅ Rate limiting on auth endpoints (5 attempts per 15 minutes)
+- ✅ Security headers (HSTS, X-Frame-Options, X-Content-Type-Options)
+- ✅ Environment validation on startup
 
 ### Phase 2: Contract Management
 - ✅ Create contracts (owned by user)
 - ✅ List all user contracts
 - ✅ Get single contract details
 - ✅ Update contract information
-- ✅ Delete contracts
-- ✅ User ownership verification
+- ✅ Delete contracts (with cascade)
+- ✅ User ownership verification (IDOR prevention)
 
 ### Phase 3: PDF Upload & Text Extraction
 - ✅ PDF upload with file validation
 - ✅ Automatic text extraction from PDFs
-- ✅ File storage management
+- ✅ File storage management with UUID filenames
 - ✅ Secure filename handling
+- ✅ Rate limiting on uploads (20 per hour)
 
 ### Phase 4: AI Contract Analysis
 - ✅ OpenRouter AI integration
 - ✅ Contract summarization
 - ✅ Key information extraction
 - ✅ Risk analysis and identification
-- ✅ Structured JSON responses
-- ✅ Analysis status tracking
+- ✅ Structured JSON responses with validation
+- ✅ Analysis status tracking (PENDING → COMPLETED/FAILED)
+- ✅ API error handling and fallback
 
 ### Phase 5: Chat History
 - ✅ Save chat messages (user + AI response)
 - ✅ Retrieve chat history for contracts
 - ✅ Timestamp tracking
 - ✅ Contract ownership verification
+- ✅ Conversation continuity
+
+### Phase 6: Gmail Integration (🆕)
+- ✅ Gmail OAuth2 authorization flow
+- ✅ Token encryption (AES-256-GCM) for secure storage
+- ✅ Inbox synchronization with PDF attachment fetching
+- ✅ Automatic contract creation from email attachments
+- ✅ Email-to-contract workflow
+- ✅ Token refresh handling
+- ✅ Sync status tracking
+- ✅ Rate limiting on Gmail operations (10 per hour)
 
 ## Project Structure
 
@@ -178,6 +194,33 @@ OPENROUTER_MODEL="google/gemma-3-27b-it"
    
    Current setup uses: **google/gemma-3-27b-it** (free tier)
 
+#### Phase 6: Gmail OAuth Setup (Email Integration)
+
+1. **Create Google Cloud Project:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com)
+   - Create new project: "ProcureAI"
+   - Enable Gmail API: Search "Gmail API" → Click "Enable"
+
+2. **Create OAuth2 Credentials:**
+   - Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
+   - Select "Web application"
+   - Add Authorized JavaScript origins: `http://localhost:5000`
+   - Add Authorized redirect URIs: `http://localhost:5000/api/gmail/callback`
+   - Copy Client ID and Client Secret
+
+3. **Add to .env:**
+   ```
+   GOOGLE_CLIENT_ID="xxxx.apps.googleusercontent.com"
+   GOOGLE_CLIENT_SECRET="GOCSPX-xxxxx"
+   GOOGLE_REDIRECT_URI="http://localhost:5000/api/gmail/callback"
+   ```
+
+4. **Optional: Token Encryption Key**
+   ```
+   ENCRYPTION_KEY="optional-32-char-hex-string"
+   # If not set, derived from JWT_SECRET
+   ```
+
 ### 4. Database Migration
 
 ```bash
@@ -216,30 +259,40 @@ You should see:
 
 ### Authentication
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/register` | ❌ | Register new user |
-| POST | `/api/auth/login` | ❌ | Login user |
-| GET | `/api/auth/me` | ✅ | Get current user |
+| Method | Endpoint | Auth | Description | Rate Limit |
+|--------|----------|------|-------------|-----------|
+| POST | `/api/auth/register` | ❌ | Register new user | 5/15min |
+| POST | `/api/auth/login` | ❌ | Login user | 5/15min |
+| GET | `/api/auth/me` | ✅ | Get current user | None |
 
 ### Contracts
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/contracts` | ✅ | List all user contracts |
-| GET | `/api/contracts/:id` | ✅ | Get contract details |
-| POST | `/api/contracts` | ✅ | Create contract |
-| POST | `/api/contracts/upload` | ✅ | Upload PDF contract |
-| POST | `/api/contracts/:id/analyze` | ✅ | Analyze contract with AI |
-| PUT | `/api/contracts/:id` | ✅ | Update contract |
-| DELETE | `/api/contracts/:id` | ✅ | Delete contract |
+| Method | Endpoint | Auth | Description | Rate Limit |
+|--------|----------|------|-------------|-----------|
+| GET | `/api/contracts` | ✅ | List all user contracts | None |
+| GET | `/api/contracts/:id` | ✅ | Get contract details | None |
+| POST | `/api/contracts` | ✅ | Create contract | None |
+| POST | `/api/contracts/upload` | ✅ | Upload PDF contract | 20/hour |
+| POST | `/api/contracts/:id/analyze` | ✅ | Analyze contract with AI | None |
+| PUT | `/api/contracts/:id` | ✅ | Update contract | None |
+| DELETE | `/api/contracts/:id` | ✅ | Delete contract | None |
 
 ### Chat History
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/contracts/:contractId/chat` | ✅ | Get chat history |
-| POST | `/api/contracts/:contractId/chat` | ✅ | Save chat message |
+| Method | Endpoint | Auth | Description | Rate Limit |
+|--------|----------|------|-------------|-----------|
+| GET | `/api/contracts/:contractId/chat` | ✅ | Get chat history | None |
+| POST | `/api/contracts/:contractId/chat` | ✅ | Save chat message | None |
+
+### Gmail Integration (Phase 6)
+
+| Method | Endpoint | Auth | Description | Rate Limit |
+|--------|----------|------|-------------|-----------|
+| GET | `/api/gmail/auth` | ✅ | Generate OAuth URL | 10/hour |
+| GET | `/api/gmail/callback` | ❌ | OAuth callback (from Google) | None |
+| GET | `/api/gmail/status` | ✅ | Get Gmail connection status | 10/hour |
+| POST | `/api/gmail/sync` | ✅ | Sync inbox & import contracts | 10/hour |
+| POST | `/api/gmail/disconnect` | ✅ | Disconnect Gmail account | 10/hour |
 
 ## API Examples
 
@@ -515,19 +568,40 @@ timestamp       DateTime @default(now())
 
 ### JWT Authentication
 - Token generated on successful login/registration
-- Expires after 7 days (configurable)
+- Expires after 1 day (configurable, default was 7 days)
 - Verified on protected endpoints
-- Secret stored in environment variable
+- Secret stored in environment variable (validated at startup - must be minimum 16 characters)
+- Fails fast in production if JWT_SECRET not configured
 
-### User Ownership
+### Token Encryption (Phase 6)
+- Gmail access tokens encrypted using AES-256-GCM
+- Refresh tokens encrypted and stored securely
+- IV and auth tag stored with encrypted data
+- Encryption key derived from JWT_SECRET
+
+### Rate Limiting
+- Auth endpoints: 5 attempts per 15 minutes (brute force protection)
+- Upload endpoints: 20 per hour (resource protection)
+- Gmail operations: 10 per hour (API quota management)
+- Automatically disabled in test environment
+
+### User Ownership & IDOR Prevention
 - Users can only access their own contracts
 - Users can only access chat history for their contracts
 - Verified in database queries with userId filter
+- All resource access checks at database level
+
+### Security Headers
+- `Strict-Transport-Security` - HTTPS enforcement (1 year)
+- `X-Content-Type-Options: nosniff` - Prevent MIME sniffing
+- `X-Frame-Options: DENY` - Clickjacking protection
+- `X-XSS-Protection` - XSS attack mitigation
 
 ### CORS
 - Enabled for frontend URLs (localhost:3000, localhost:3001)
 - Credentials supported
 - Specific methods allowed: GET, POST, PUT, DELETE, PATCH
+- Specific headers allowed: Content-Type, Authorization
 
 ## Error Handling
 

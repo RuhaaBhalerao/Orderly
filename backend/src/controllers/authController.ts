@@ -29,10 +29,11 @@ export async function registerController(
 
     res.status(201).json(result);
   } catch (error: any) {
+    console.error('Error in registerController:', error);
     if (error.status) {
       res.status(error.status).json({ message: error.message });
     } else {
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ message: error.message || 'Internal server error' });
     }
   }
 }

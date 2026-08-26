@@ -6,15 +6,18 @@ import {
   meController,
 } from '../controllers/authController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { authLimiter } from '../middleware/rateLimitMiddleware';
 
 const router = Router();
 
 /**
  * POST /api/auth/register
  * Register a new user
+ * Rate limited: 5 attempts per 15 minutes
  */
 router.post(
   '/register',
+  authLimiter,
   [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('email')
@@ -31,9 +34,11 @@ router.post(
 /**
  * POST /api/auth/login
  * Login user
+ * Rate limited: 5 attempts per 15 minutes
  */
 router.post(
   '/login',
+  authLimiter,
   [
     body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
     body('password').notEmpty().withMessage('Password is required'),

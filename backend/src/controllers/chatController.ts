@@ -32,9 +32,11 @@ export async function getChatHistoryController(
 
 /**
  * POST /api/contracts/:contractId/chat
- * Save a chat message
+ * Generate AI response to user question (PHASE 5)
+ * Request body: { userMessage: "What are the payment terms?" }
+ * Response: { userMessage, aiResponse, timestamp }
  */
-export async function saveChatMessageController(
+export async function generateChatResponseController(
   req: AuthRequest,
   res: Response
 ): Promise<void> {
@@ -58,21 +60,44 @@ export async function saveChatMessageController(
     }
 
     const { contractId } = req.params;
-    const { userMessage, aiResponse } = req.body;
+    const { userMessage } = req.body;
 
-    const chatMessage = await chatService.saveChatMessage(
-      contractId,
-      req.userId,
-      userMessage,
-      aiResponse
-    );
+    console.log(`[Controller] Chat request for contract ${contractId}: "${userMessage.substring(0, 50)}..."`);
 
-    res.status(201).json(chatMessage);
+    // Generate AI response
+    const result = await chatService.generateChatResponse(contractId, req.userId, userMessage);
+
+    if (!result.success) {
+      // Determine appropriate HTTP status
+      let statusCode = 500;
+      if (result.error?.includes('not found')) {
+        statusCode = 404;
+      } else if (result.error?.includes('empty')) {
+        statusCode = 400;
+      } else if (result.error?.includes('rate-limited')) {
+        statusCode = 429;
+      } else if (result.error?.includes('authentication failed')) {
+        statusCode = 500; // Server-side config issue
+      }
+
+      res.status(statusCode).json({
+        message: 'Failed to generate response',
+        error: result.error,
+      });
+      return;
+    }
+
+    // Return the saved message with AI response
+    res.status(201).json({
+      userMessage: result.userMessage,
+      aiResponse: result.aiResponse,
+      timestamp: result.timestamp,
+    });
   } catch (error: any) {
+    console.error('Error generating chat response:', error);
     if (error.status) {
       res.status(error.status).json({ message: error.message });
     } else {
-      console.error('Error saving chat message:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   }

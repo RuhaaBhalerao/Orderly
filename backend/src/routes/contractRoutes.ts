@@ -11,6 +11,7 @@ import {
 import { uploadMiddleware } from '../middleware/uploadMiddleware';
 import { uploadContractController } from '../controllers/uploadController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { uploadLimiter } from '../middleware/rateLimitMiddleware';
 
 const router = Router();
 
@@ -61,9 +62,11 @@ router.post(
 /**
  * POST /api/contracts/upload
  * Upload PDF contract with automatic text extraction
+ * Rate limited: 20 uploads per hour
  */
 router.post(
   '/upload',
+  uploadLimiter,
   uploadMiddleware.single('file'),
   [
     body('title').trim().notEmpty().withMessage('Title is required'),

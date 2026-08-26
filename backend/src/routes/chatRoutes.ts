@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { body } from 'express-validator';
 import {
   getChatHistoryController,
-  saveChatMessageController,
+  generateChatResponseController,
 } from '../controllers/chatController';
 import { authMiddleware } from '../middleware/authMiddleware';
 
@@ -19,7 +19,8 @@ router.get('/', getChatHistoryController);
 
 /**
  * POST /api/contracts/:contractId/chat
- * Save a chat message
+ * Generate AI response to user question (Phase 5)
+ * Request body: { userMessage: "What are the payment terms?" }
  */
 router.post(
   '/',
@@ -27,13 +28,11 @@ router.post(
     body('userMessage')
       .trim()
       .notEmpty()
-      .withMessage('User message is required'),
-    body('aiResponse')
-      .trim()
-      .notEmpty()
-      .withMessage('AI response is required'),
+      .withMessage('User message is required')
+      .isLength({ min: 1, max: 5000 })
+      .withMessage('Message must be between 1 and 5000 characters'),
   ],
-  saveChatMessageController
+  generateChatResponseController
 );
 
 export default router;

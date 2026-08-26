@@ -16,6 +16,7 @@ model User {
   email     String   @unique
   password  String   // hashed password
   contracts Contract[]
+  gmailConnection GmailConnection?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -67,4 +68,22 @@ model ChatHistory {
   timestamp       DateTime @default(now())
 
   @@map("chat_history")
+}
+
+model GmailConnection {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gmailEmail        String
+  accessToken       String   @db.Text  // encrypted
+  refreshToken      String?  @db.Text  // encrypted
+  expiresAt         DateTime?
+  connectedAt       DateTime @default(now())
+  lastSyncAt        DateTime?
+  syncStatus        String   @default("IDLE")  // IDLE, SYNCING, ERROR
+  syncError         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("gmail_connections")
 }

@@ -283,3 +283,182 @@ export function formatAnalysisResponse(analysis: {
     recommendations: analysis.aiRecommendations || [],
   };
 }
+
+/**
+ * System prompt for conversational chat about contracts
+ * Different from analysis prompt - focused on answering specific questions
+ */
+const CHAT_SYSTEM_PROMPT = `You are a helpful procurement contract assistant. Your role is to answer questions about contracts using ONLY the information provided to you.
+
+IMPORTANT RULES:
+1. Answer ONLY using the provided contract content. Never invent information or use outside knowledge.
+2. If the contract does not contain the answer to a question, clearly state: "The contract does not contain this information."
+3. Quote relevant contract sections when possible to support your answer.
+4. Explain clauses in business-friendly language.
+5. Do NOT provide legal advice - say "Please consult with legal counsel" if the question is about legal implications.
+6. Be concise but thorough.
+7. If asked about something outside the contract's scope, redirect to what information IS available.
+
+You are helping a procurement professional understand their contracts quickly and accurately.`;
+
+/**
+ * Generates a conversational AI response to a user question about a contract
+ * Used for the chat Q&A functionality
+ */
+export async function generateChatResponse(
+  userQuestion: string,
+  contractText: string,
+  contractSummary?: string
+): Promise<{
+  success: boolean;
+  response?: string;
+  error?: string;
+}> {
+  try {
+    // Validate inputs
+    if (!userQuestion || userQuestion.trim().length === 0) {
+      return {
+        success: false,
+        error: 'Question cannot be empty',
+      };
+    }
+
+    if (!contractText || contractText.trim().length === 0) {
+      return {
+        success: false,
+        error: 'No contract text available for analysis',
+      };
+    }
+
+    // Check environment variables
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    const model = process.env.OPENROUTER_MODEL;
+
+    if (!apiKey) {
+      console.error('OPENROUTER_API_KEY not configured');
+      return {
+        success: false,
+        error: 'AI service not configured. Please set OPENROUTER_API_KEY in environment variables.',
+      };
+    }
+
+    if (!model) {
+      console.error('OPENROUTER_MODEL not configured');
+      return {
+        success: false,
+        error: 'AI model not configured. Please set OPENROUTER_MODEL in environment variables.',
+      };
+    }
+
+    console.log(`[Chat AI] Generating response with model: ${model}`);
+
+    // Truncate contract text to fit in context window
+    // Leave space for: system prompt + summary + question + response
+    // Estimate: system=500 tokens, summary=200, question=100, response=500 = 1300 tokens reserved
+    // Model limit: 2048 tokens, so ~750 tokens available for contract text (~3000 chars)
+    const CONTRACT_CONTEXT_LIMIT = 30000; // ~7500 tokens
+    const { text: truncatedText, truncated } = truncateText(contractText, CONTRACT_CONTEXT_LIMIT);
+
+    if (truncated) {
+      console.warn(`[Chat AI] Contract text truncated from ${contractText.length} to ${truncatedText.length} characters`);
+    }
+
+    // Build the user message with contract context
+    const userMessageContent = contractSummary
+      ? `Contract Summary:\n${contractSummary}\n\nFull Contract Text:\n${truncatedText}\n\nQuestion:\n${userQuestion}`
+      : `Contract Text:\n${truncatedText}\n\nQuestion:\n${userQuestion}`;
+
+    // Prepare the API request
+    const payload = {
+      model,
+      messages: [
+        {
+          role: 'system',
+          content: CHAT_SYSTEM_PROMPT,
+        },
+        {
+          role: 'user',
+          content: userMessageContent,
+        },
+      ],
+      temperature: 0.5, // Slightly higher than analysis for more natural conversation
+      max_tokens: 1024, // Reasonable limit for chat response
+    };
+
+    console.log('[Chat AI] Sending request to OpenRouter...');
+
+    // Call OpenRouter API
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // Handle API errors
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({})) as any;
+      const statusCode = response.status;
+      const errorMessage = errorData.error?.message || response.statusText;
+
+      console.error(`[Chat AI] OpenRouter API error (${statusCode}):`, errorMessage);
+
+      if (statusCode === 429) {
+        return {
+          success: false,
+          error: 'AI service is currently rate-limited. Please try again in a moment.',
+        };
+      }
+
+      if (statusCode === 401 || statusCode === 403) {
+        return {
+          success: false,
+          error: 'AI service authentication failed. Please check API configuration.',
+        };
+      }
+
+      if (statusCode >= 500) {
+        return {
+          success: false,
+          error: 'AI service is temporarily unavailable. Please try again later.',
+        };
+      }
+
+      return {
+        success: false,
+        error: `AI service error: ${errorMessage}`,
+      };
+    }
+
+    // Parse response
+    const responseData = await response.json() as any;
+    console.log('[Chat AI] Received response from OpenRouter');
+
+    // Extract the assistant's message
+    const aiResponseText = responseData.choices?.[0]?.message?.content;
+
+    if (!aiResponseText) {
+      console.error('[Chat AI] No content in API response');
+      return {
+        success: false,
+        error: 'Received empty response from AI service',
+      };
+    }
+
+    console.log('[Chat AI] Response generated successfully');
+
+    return {
+      success: true,
+      response: aiResponseText,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('[Chat AI] Unexpected error:', errorMessage);
+    return {
+      success: false,
+      error: `Unexpected error during chat: ${errorMessage}`,
+    };
+  }
+}
