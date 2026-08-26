@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ToastProvider } from '@/lib/toast'
 import { ToastContainer } from '@/components/ui/Toast'
+import { AuthProvider } from '@/context/AuthContext'
 
 export const metadata: Metadata = {
   title: 'Procure AI - Contract Intelligence',
@@ -16,10 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-gray-100">
-        <ToastProvider>
-          {children}
-          <ToastContainer />
-        </ToastProvider>
+        <AuthProvider>
+          <ToastProvider>
+            {children}
+            <ToastContainer />
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   )

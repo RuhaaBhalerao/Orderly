@@ -2,6 +2,7 @@
 
 import { KPICard } from '@/components/dashboard/KPICard'
 import { ContractTable } from '@/components/contracts/ContractTable'
+import { GmailStatus } from '@/components/gmail/GmailStatus'
 import { mockKPIs } from '@/data/mockKPIs'
 import { mockContracts } from '@/data/mockContracts'
 import { ChevronRight } from 'lucide-react'
@@ -12,6 +13,9 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 space-y-8">
+      {/* Gmail Integration Status */}
+      <GmailStatus />
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {mockKPIs.map((kpi, index) => (

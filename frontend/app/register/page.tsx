@@ -5,13 +5,16 @@ import { useState, useEffect } from 'react'
 import { Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter()
-  const { isAuthenticated, login } = useAuth()
+  const { isAuthenticated, register } = useAuth()
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -20,24 +23,69 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, router])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const validateForm = (): boolean => {
+    setError('')
+
+    if (!name.trim()) {
+      setError('Name is required')
+      return false
+    }
+
+    if (!email.trim()) {
+      setError('Email is required')
+      return false
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Valid email is required')
+      return false
+    }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
+      return false
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return false
+    }
+
+    return true
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
+
+    if (!validateForm()) {
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const result = await login(email, password)
-      
+      const result = await register(name, email, password)
+
       if (result.error) {
         setError(result.error)
         setIsLoading(false)
         return
       }
 
-      // Navigate to dashboard on success
-      router.push('/dashboard')
+      setSuccess('Account created successfully! Redirecting to dashboard...')
+      setName('')
+      setEmail('')
+      setPassword('')
+      setConfirmPassword('')
+
+      // Redirect to dashboard
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1500)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Login failed'
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed'
       setError(errorMessage)
       setIsLoading(false)
     }
@@ -49,7 +97,7 @@ export default function LoginPage() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full filter blur-3xl opacity-30 -z-10"></div>
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full filter blur-3xl opacity-30 -z-10"></div>
 
-      {/* Login Card */}
+      {/* Register Card */}
       <div className="relative w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
           {/* Logo */}
@@ -64,13 +112,37 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleRegister} className="space-y-5">
             {/* Error Message */}
             {error && (
               <div className="bg-error-light border border-red-200 text-error px-4 py-3 rounded-lg text-sm font-medium">
                 {error}
               </div>
             )}
+
+            {/* Success Message */}
+            {success && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg text-sm font-medium">
+                {success}
+              </div>
+            )}
+
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                required
+              />
+            </div>
+
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
@@ -101,55 +173,43 @@ export default function LoginPage() {
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                 required
               />
+              <p className="text-xs text-gray-600 mt-1">At least 8 characters</p>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 text-primary accent-primary"
-                />
-                <span className="text-gray-700">Remember me</span>
+            {/* Confirm Password */}
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-900 mb-2">
+                Confirm Password
               </label>
-              <a href="#" className="text-primary hover:text-primary-dark font-semibold transition-colors">
-                Forgot password?
-              </a>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                required
+              />
             </div>
 
-            {/* Login Button */}
+            {/* Register Button */}
             <button
               type="submit"
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-primary to-primary-dark text-white font-semibold py-2.5 rounded-lg hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 
-          {/* Demo Info */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-600 text-center mb-3 font-medium">
-              Demo Credentials
+          {/* Login Link */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <a href="/" className="text-primary hover:text-primary-dark font-semibold transition-colors">
+                Sign In
+              </a>
             </p>
-            <div className="bg-gradient-subtle rounded-lg p-3 space-y-1 text-xs">
-              <p className="text-gray-700">
-                <span className="font-medium">Email:</span> demo@acme.com
-              </p>
-              <p className="text-gray-700">
-                <span className="font-medium">Password:</span> demo
-              </p>
-            </div>
-
-            {/* Register Link */}
-            <div className="mt-4 text-center">
-              <p className="text-xs text-gray-600">
-                Don&apos;t have an account?{' '}
-                <a href="/register" className="text-primary hover:text-primary-dark font-semibold transition-colors">
-                  Create one
-                </a>
-              </p>
-            </div>
           </div>
         </div>
 

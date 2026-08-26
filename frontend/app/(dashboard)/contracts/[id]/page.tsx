@@ -1,15 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, FileText, AlertTriangle } from 'lucide-react'
 import { getContractById } from '@/data/mockContracts'
-import { mockChatHistory } from '@/data/mockChat'
 import { RiskBadge } from '@/components/shared/RiskBadge'
 import { StatusBadge } from '@/components/shared/StatusBadge'
 import { ChatMessage } from '@/components/chat/ChatMessage'
 import { Card, CardContent, CardHeader } from '@/components/shared/Card'
 import { ChatMessage as ChatMessageType } from '@/types'
+import { chatAPI } from '@/lib/api'
 import Link from 'next/link'
 
 export default function ContractDetailsPage() {
@@ -18,8 +18,43 @@ export default function ContractDetailsPage() {
   const contractId = params.id as string
 
   const contract = getContractById(contractId)
-  const [chatMessages, setChatMessages] = useState<ChatMessageType[]>(mockChatHistory)
+  const [chatMessages, setChatMessages] = useState<ChatMessageType[]>([])
   const [inputValue, setInputValue] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSending, setIsSending] = useState(false)
+  const [error, setError] = useState('')
+
+  // Load chat history on mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      setIsLoading(true)
+      const response = await chatAPI.getHistory(contractId)
+      
+      if (!response.error && response.data) {
+        // Convert API response to ChatMessageType format
+        const messages = response.data.map((msg: any) => [
+          {
+            id: `${msg.id}-user`,
+            type: 'user' as const,
+            content: msg.userMessage,
+            timestamp: new Date(msg.timestamp),
+          },
+          {
+            id: `${msg.id}-ai`,
+            type: 'ai' as const,
+            content: msg.aiResponse,
+            timestamp: new Date(msg.timestamp),
+          },
+        ]).flat()
+        setChatMessages(messages)
+      }
+      setIsLoading(false)
+    }
+
+    if (contractId) {
+      loadChatHistory()
+    }
+  }, [contractId])
 
   if (!contract) {
     return (
@@ -38,28 +73,44 @@ export default function ContractDetailsPage() {
     )
   }
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isSending) return
 
-    // Add user message
+    const userMessageText = inputValue
+    setInputValue('')
+    setIsSending(true)
+    setError('')
+
+    // Add user message immediately
     const userMessage: ChatMessageType = {
       id: `msg-${Date.now()}`,
       type: 'user',
-      content: inputValue,
+      content: userMessageText,
       timestamp: new Date(),
     }
+    setChatMessages(prev => [...prev, userMessage])
 
-    // Simulate AI response
-    const aiMessage: ChatMessageType = {
-      id: `msg-${Date.now() + 1}`,
-      type: 'ai',
-      content:
-        'Based on the contract details, this appears to be a standard term in agreements like this. You may want to review Section 4.2 for more context.',
-      timestamp: new Date(Date.now() + 1000),
+    // Send to backend
+    const response = await chatAPI.sendMessage(contractId, userMessageText)
+    
+    if (response.error) {
+      setError(response.error)
+      setIsSending(false)
+      return
     }
 
-    setChatMessages([...chatMessages, userMessage, aiMessage])
-    setInputValue('')
+    if (response.data) {
+      // Add AI response
+      const aiMessage: ChatMessageType = {
+        id: `msg-${Date.now() + 1}`,
+        type: 'ai',
+        content: response.data.aiResponse,
+        timestamp: new Date(response.data.timestamp),
+      }
+      setChatMessages(prev => [...prev, aiMessage])
+    }
+
+    setIsSending(false)
   }
 
   return (
@@ -262,38 +313,61 @@ export default function ContractDetailsPage() {
               </p>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col">
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
-                {chatMessages.map(message => (
-                  <ChatMessage key={message.id} message={message} />
-                ))}
-              </div>
-
-              {/* Input */}
-              <div className="border-t border-gray-200 pt-4">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        handleSendMessage()
-                      }
-                    }}
-                    placeholder="Ask a question..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim()}
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
-                  >
-                    Send
-                  </button>
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="animate-pulse mb-2">Loading chat history...</div>
+                  </div>
                 </div>
+              ) : chatMessages.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <p className="text-sm">No messages yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Ask a question to get started</p>
+                  </div>
+                </div>
+              ) : (
+                chatMessages.map(message => (
+                  <ChatMessage key={message.id} message={message} />
+                ))
+              )}
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm mb-4">
+                {error}
               </div>
+            )}
+
+            {/* Input */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                  placeholder="Ask a question..."
+                  disabled={isSending}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm disabled:bg-gray-50 disabled:text-gray-500"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim() || isSending}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                >
+                  {isSending ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </div>
             </CardContent>
           </Card>
         </div>
