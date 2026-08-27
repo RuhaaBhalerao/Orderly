@@ -1,15 +1,5 @@
 import fs from 'fs/promises';
-
-let pdfParse: any;
-
-// Dynamic import of pdf-parse
-async function getPdfParser() {
-  if (!pdfParse) {
-    const module = await import('pdf-parse');
-    pdfParse = module.default;
-  }
-  return pdfParse;
-}
+import { PDFParse } from 'pdf-parse';
 
 /**
  * Extract text from a PDF file
@@ -17,21 +7,25 @@ async function getPdfParser() {
  */
 export async function extractTextFromPDF(filePath: string): Promise<string | null> {
   try {
-    console.log(`Extracting text from PDF: ${filePath}`);
+    console.log(`[PDF] File received: ${filePath}`);
 
     // Check if file exists
     await fs.access(filePath);
 
-    // Get PDF parser
-    const parser = await getPdfParser();
+    // Get file stats for logging
+    const stats = await fs.stat(filePath);
+    console.log(`[PDF] File size: ${stats.size} bytes`);
 
     // Read PDF file
+    console.log(`[PDF] Extraction started`);
     const dataBuffer = await fs.readFile(filePath);
 
-    // Parse PDF
-    const pdf = await parser(dataBuffer);
+    // Parse PDF using pdf-parse with data as Uint8Array
+    const pdfParser = new PDFParse({ data: new Uint8Array(dataBuffer) });
+    const textResult = await pdfParser.getText();
+    const pdf = { text: textResult.text, numpages: textResult.pages.length };
 
-    console.log(`PDF loaded. Pages: ${pdf.numpages}`);
+    console.log(`[PDF] PDF loaded successfully. Pages: ${pdf.numpages}`);
 
     let extractedText = pdf.text || '';
 
@@ -40,11 +34,11 @@ export async function extractTextFromPDF(filePath: string): Promise<string | nul
 
     // Return null if no text found
     if (!extractedText || extractedText.length === 0) {
-      console.log('No extractable text found in PDF');
+      console.log('[PDF] No extractable text found in PDF');
       return null;
     }
 
-    console.log(`Extracted ${extractedText.length} characters from PDF`);
+    console.log(`[PDF] Extraction successful. Extracted text length: ${extractedText.length} characters`);
     return extractedText;
   } catch (error) {
     console.error('Error extracting text from PDF:', error);
@@ -64,14 +58,13 @@ export async function validatePDF(filePath: string): Promise<{ valid: boolean; h
     // Check if file exists
     await fs.access(filePath);
 
-    // Get PDF parser
-    const parser = await getPdfParser();
-
     // Read PDF file
     const dataBuffer = await fs.readFile(filePath);
 
-    // Try to parse PDF
-    const pdf = await parser(dataBuffer);
+    // Try to parse PDF using pdf-parse with data as Uint8Array
+    const pdfParser = new PDFParse({ data: new Uint8Array(dataBuffer) });
+    const textResult = await pdfParser.getText();
+    const pdf = { text: textResult.text, numpages: textResult.pages.length };
 
     // Check if PDF has pages
     if (pdf.numpages === 0) {
