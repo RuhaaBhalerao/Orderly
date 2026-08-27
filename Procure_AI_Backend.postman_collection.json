@@ -245,10 +245,10 @@
       ]
     },
     {
-      "name": "03 AI Analysis (Phase 4)",
+      "name": "03 Chat & AI Q&A (Phase 5)",
       "item": [
         {
-          "name": "Analyze Contract",
+          "name": "Contract Analysis (POST /analyze)",
           "request": {
             "method": "POST",
             "header": [
@@ -261,6 +261,112 @@
               "raw": "{{baseUrl}}/api/contracts/{{contractId}}/analyze",
               "host": ["{{baseUrl}}"],
               "path": ["api", "contracts", "{{contractId}}", "analyze"]
+            }
+          }
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Ask Contract Question (REAL AI)",
+          "event": [
+            {
+              "listen": "tests",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  console.log('Chat response received');",
+                  "  console.log('User message: ' + pm.response.json().userMessage);",
+                  "  console.log('AI response: ' + pm.response.json().aiResponse);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userMessage\": \"What are the payment terms in this contract?\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Ask About Risk Factors",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userMessage\": \"What risks or red flags should I be aware of?\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}", "chat"]
+            }
+          }
+        },
+        {
+          "name": "Ask About Termination",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"userMessage\": \"How can we terminate this contract early?\"}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}/chat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}", "chat"]
             }
           }
         }
