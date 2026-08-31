@@ -1,4 +1,4 @@
-import { validateAiResponseSafe, AiAnalysisResponse } from '../types/aiAnalysis';
+import { validateAiResponseSafe, AiAnalysisResponse } from '../types/aiAnalysis.js';
 
 /**
  * Maximum text length to send to AI models (tokens)

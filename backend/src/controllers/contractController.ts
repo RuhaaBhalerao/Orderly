@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import { AuthRequest } from '../types/auth';
-import * as contractService from '../services/contractService';
-import { getUploadFileUrl } from '../middleware/uploadMiddleware';
+import { AuthRequest } from '../types/auth.js';
+import * as contractService from '../services/contractService.js';
+import { getUploadFileUrl } from '../middleware/uploadMiddleware.js';
 
 export async function getContractsController(req: AuthRequest, res: Response) {
   try {

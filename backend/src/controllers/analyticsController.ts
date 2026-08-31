@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { AuthRequest } from '../types/auth';
-import * as analyticsService from '../services/analyticsService';
+import { AuthRequest } from '../types/auth.js';
+import * as analyticsService from '../services/analyticsService.js';
 
 export async function getAnalyticsController(req: AuthRequest, res: Response) {
   try {

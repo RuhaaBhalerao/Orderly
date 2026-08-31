@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../types/auth';
-import { verifyToken } from '../utils/jwt';
+import { AuthRequest } from '../types/auth.js';
+import { verifyToken } from '../utils/jwt.js';
 
 /**
  * Middleware to verify JWT token and attach user info to request

@@ -1,7 +1,7 @@
-import { prisma } from '../lib/prisma';
-import { hashPassword, comparePassword } from '../utils/password';
-import { generateToken } from '../utils/jwt';
-import { RegisterPayload, LoginPayload, AuthResponse } from '../types/auth';
+import { prisma } from '../lib/prisma.js';
+import { hashPassword, comparePassword } from '../utils/password.js';
+import { generateToken } from '../utils/jwt.js';
+import { RegisterPayload, LoginPayload, AuthResponse } from '../types/auth.js';
 
 const DEMO_ACCOUNTS = {
   'rahul@example.com': {

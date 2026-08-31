@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { AuthRequest } from '../types/auth';
-import * as supplierService from '../services/supplierService';
+import { AuthRequest } from '../types/auth.js';
+import * as supplierService from '../services/supplierService.js';
 
 export async function getSuppliersController(req: AuthRequest, res: Response) {
   try {

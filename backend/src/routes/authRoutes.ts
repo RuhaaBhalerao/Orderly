@@ -4,9 +4,9 @@ import {
   registerController,
   loginController,
   meController,
-} from '../controllers/authController';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { authLimiter } from '../middleware/rateLimitMiddleware';
+} from '../controllers/authController.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { authLimiter } from '../middleware/rateLimitMiddleware.js';
 
 const router = Router();
 

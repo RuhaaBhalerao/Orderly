@@ -1,8 +1,8 @@
 import { Router, Response } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { requireRoles } from '../middleware/rbacMiddleware';
-import { AuthRequest } from '../types/auth';
-import { prisma } from '../lib/prisma';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { requireRoles } from '../middleware/rbacMiddleware.js';
+import { AuthRequest } from '../types/auth.js';
+import { prisma } from '../lib/prisma.js';
 
 const router = Router();
 

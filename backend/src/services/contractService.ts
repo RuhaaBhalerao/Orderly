@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma';
+import { prisma } from '../lib/prisma.js';
 
 export interface CreateContractPayload {
   contractName: string;
@@ -128,7 +128,7 @@ export async function deleteContract(contractId: string, userId: string) {
 
   if (contract.fileName) {
     try {
-      const { deleteUploadedFile } = await import('../middleware/uploadMiddleware');
+      const { deleteUploadedFile } = await import('../middleware/uploadMiddleware.js');
       await deleteUploadedFile(contract.fileName);
     } catch (err) {
       console.error('Error removing file:', err);

@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { requireRoles } from '../middleware/rbacMiddleware';
-import { uploadMiddleware } from '../middleware/uploadMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { requireRoles } from '../middleware/rbacMiddleware.js';
+import { uploadMiddleware } from '../middleware/uploadMiddleware.js';
 import {
   getContractsController,
   getContractController,
   createContractController,
   deleteContractController,
-} from '../controllers/contractController';
+} from '../controllers/contractController.js';
 
 const router = Router();
 

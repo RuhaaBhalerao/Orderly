@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { validationResult } from 'express-validator';
-import { AuthRequest, RegisterPayload, LoginPayload } from '../types/auth';
-import * as authService from '../services/authService';
+import { AuthRequest, RegisterPayload, LoginPayload } from '../types/auth.js';
+import * as authService from '../services/authService.js';
 
 /**
  * POST /api/auth/register

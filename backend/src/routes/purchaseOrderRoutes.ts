@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { requireRoles } from '../middleware/rbacMiddleware';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { requireRoles } from '../middleware/rbacMiddleware.js';
 import {
   createPurchaseOrderController,
   getPurchaseOrdersController,
   getPurchaseOrderByIdController,
   updatePOStatusController,
-} from '../controllers/purchaseOrderController';
+} from '../controllers/purchaseOrderController.js';
 
 const router = Router();
 

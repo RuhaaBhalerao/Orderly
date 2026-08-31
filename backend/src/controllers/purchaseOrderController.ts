@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { AuthRequest } from '../types/auth';
-import * as poService from '../services/purchaseOrderService';
+import { AuthRequest } from '../types/auth.js';
+import * as poService from '../services/purchaseOrderService.js';
 
 export async function createPurchaseOrderController(req: AuthRequest, res: Response) {
   try {

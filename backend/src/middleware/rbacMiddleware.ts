@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../types/auth';
+import { AuthRequest } from '../types/auth.js';
 
 /**
  * Middleware factory to authorize specific roles

@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { AuthRequest } from '../types/auth';
-import * as dashboardService from '../services/dashboardService';
+import { AuthRequest } from '../types/auth.js';
+import * as dashboardService from '../services/dashboardService.js';
 
 export async function getDashboardController(req: AuthRequest, res: Response) {
   try {
