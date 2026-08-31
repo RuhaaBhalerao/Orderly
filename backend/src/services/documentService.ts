@@ -72,7 +72,7 @@ export async function validatePDF(filePath: string): Promise<{ valid: boolean; h
     }
 
     // Check if PDF has extractable text
-    const hasText = pdf.text && pdf.text.trim().length > 0;
+    const hasText = Boolean(pdf.text && pdf.text.trim().length > 0);
     return { valid: true, hasText };
   } catch (error) {
     console.error('Error validating PDF:', error);

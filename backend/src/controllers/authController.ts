@@ -86,7 +86,7 @@ export async function meController(
     }
 
     const user = await authService.getUserById(req.userId);
-    res.status(200).json(user);
+    res.status(200).json({ user, ...user });
   } catch (error: any) {
     if (error.status) {
       res.status(error.status).json({ message: error.message });

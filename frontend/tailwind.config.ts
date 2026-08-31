@@ -8,49 +8,45 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ProcureAI Brand Colors
-        primary: '#0F766E',        // Deep teal green
-        'primary-dark': '#0D5F5A', // Darker teal
-        'primary-light': '#14B8A6', // Light teal
-        accent: '#4ECDC4',         // Mint accent
-        'accent-light': '#7EE8DD', // Light mint
+        // Green Aesthetic Palette
+        forest: {
+          DEFAULT: '#173F32',
+          dark: '#0F2C23',
+          light: '#245646',
+          muted: '#527968',
+        },
+        sage: {
+          DEFAULT: '#BFD8CC',
+          light: '#D5E6DE',
+        },
+        mint: {
+          DEFAULT: '#DCEDE5',
+          light: '#EDF5F1',
+          surface: '#F4F9F6',
+        },
+        canvas: '#F7F7F2',
+        bodyText: '#16231F',
+        mutedText: '#63736D',
+        subtleBorder: '#DCE3DF',
         
-        // Sidebar
-        sidebar: '#1F2937',        // Dark gray
-        'sidebar-hover': '#374151', // Medium gray
-        
-        // Semantic colors
-        success: '#10B981',
-        warning: '#F59E0B',
-        error: '#EF4444',
-        'error-light': '#FEE2E2',
+        // Primary alias mapped to Forest Green
+        primary: {
+          DEFAULT: '#173F32',
+          hover: '#245646',
+          light: '#DCEDE5',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
-        xs: '0 0px 1px 0 rgb(0 0 0 / 0.05)',
-        sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        card: '0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
-        'card-hover': '0 4px 12px 0 rgb(0 0 0 / 0.12)',
-        lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+        subtle: '0 1px 3px 0 rgba(23, 63, 50, 0.05), 0 1px 2px 0 rgba(23, 63, 50, 0.03)',
+        card: '0 4px 16px -2px rgba(23, 63, 50, 0.06), 0 2px 4px -1px rgba(23, 63, 50, 0.03)',
+        floating: '0 12px 32px -4px rgba(23, 63, 50, 0.12), 0 4px 12px -2px rgba(23, 63, 50, 0.06)',
       },
-      backgroundImage: {
-        'gradient-ai': 'linear-gradient(135deg, #14B8A6 0%, #4ECDC4 100%)',
-        'gradient-subtle': 'linear-gradient(135deg, rgba(20, 184, 166, 0.05) 0%, rgba(78, 205, 196, 0.05) 100%)',
-      },
-      fontSize: {
-        xs: ['12px', '16px'],
-        sm: ['14px', '20px'],
-        base: ['16px', '24px'],
-        lg: ['18px', '28px'],
-        xl: ['20px', '28px'],
-        '2xl': ['24px', '32px'],
-        '3xl': ['30px', '36px'],
-      },
-      fontWeight: {
-        light: '300',
-        normal: '400',
-        medium: '500',
-        semibold: '600',
-        bold: '700',
+      borderRadius: {
+        '2xl': '1rem',
+        '3xl': '1.5rem',
       },
     },
   },

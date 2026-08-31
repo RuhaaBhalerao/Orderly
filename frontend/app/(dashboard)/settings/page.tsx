@@ -1,215 +1,97 @@
 'use client'
 
-import { useToast } from '@/lib/toast'
 import { useAuth } from '@/hooks/useAuth'
-import { Mail, Shield, Bell, LogOut } from 'lucide-react'
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/shared/Card'
+import { User, Building2, BadgeCheck, Mail, Shield, Hash } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { addToast } = useToast()
   const { user } = useAuth()
 
-  const handleReconnect = () => {
-    addToast('Gmail reconnection flow started', 'info')
-  }
-
-  const handleDisconnect = () => {
-    addToast('Gmail account disconnected', 'success')
-  }
-
   return (
-    <div className="p-8 max-w-4xl space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-1">Manage your account and preferences</p>
+    <div className="max-w-4xl space-y-6">
+      {/* Editorial Header */}
+      <div className="pb-4 border-b border-subtleBorder">
+        <h2 className="text-2xl font-black text-forest tracking-tight flex items-center gap-2">
+          <User className="w-6 h-6 text-forest-muted" />
+          User Profile & Employee Details
+        </h2>
+        <p className="text-xs text-mutedText mt-1">
+          Personal identity details, assigned organizational department, employee ID, and system access role
+        </p>
       </div>
 
-      {/* Email Integration */}
-      <Card>
-        <CardHeader border={true}>
-          <div className="flex items-center gap-3">
-            <Mail className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-gray-900">
-              Email Integration
-            </h2>
+      {/* Main Profile Card */}
+      <div className="bg-white border border-subtleBorder rounded-3xl p-6 sm:p-8 shadow-subtle space-y-6">
+        {/* User Hero Row */}
+        <div className="flex items-center gap-5 pb-6 border-b border-subtleBorder">
+          <div className="w-16 h-16 bg-forest text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-subtle flex-shrink-0">
+            {user?.name
+              ? user.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()
+              : 'U'}
           </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Google Account
-            </label>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {user?.email || 'No email connected'}
-                  </p>
-                  <p className="text-sm text-emerald-600 font-medium mt-1">
-                    ● Connected
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-600">Connected on:</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    May 15, 2025
-                  </p>
-                </div>
-              </div>
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold text-forest">{user?.name || 'Orderly User'}</h3>
+            <p className="text-xs text-mutedText font-medium flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 text-forest-muted" />
+              {user?.email}
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="px-3 py-0.5 bg-mint-light text-forest border border-sage/60 text-[11px] font-mono font-bold rounded-full">
+                ID: {user?.employeeId || 'N/A'}
+              </span>
+              <span className="px-3 py-0.5 bg-mint text-forest border border-sage/80 text-[11px] font-bold rounded-full uppercase tracking-wider">
+                {user?.role || 'REQUESTER'}
+              </span>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Last Sync
-            </label>
-            <p className="text-gray-900">2 minutes ago</p>
+        {/* Detailed Profile Info Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div className="p-4 bg-canvas rounded-2xl border border-subtleBorder space-y-1">
+            <span className="text-mutedText block flex items-center gap-1.5 font-bold uppercase text-[10px]">
+              <Hash className="w-3.5 h-3.5 text-forest-muted" />
+              Employee Registry ID
+            </span>
+            <span className="font-mono font-bold text-forest text-base">{user?.employeeId || 'N/A'}</span>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-900">
-              <span className="font-semibold">Connected Permissions:</span> Read emails,
-              download attachments, mark emails as read
-            </p>
-          </div>
-        </CardContent>
-
-        <CardFooter border={true} className="space-x-3">
-          <button
-            onClick={handleReconnect}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-medium"
-          >
-            Reconnect
-          </button>
-          <button
-            onClick={handleDisconnect}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-          >
-            Disconnect
-          </button>
-        </CardFooter>
-      </Card>
-
-      {/* Security Settings */}
-      <Card>
-        <CardHeader border={true}>
-          <div className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-gray-900">Security</h2>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <p className="text-gray-600 mb-3">
-              Last changed 3 months ago
-            </p>
-            <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-              Change Password
-            </button>
+          <div className="p-4 bg-canvas rounded-2xl border border-subtleBorder space-y-1">
+            <span className="text-mutedText block flex items-center gap-1.5 font-bold uppercase text-[10px]">
+              <Building2 className="w-3.5 h-3.5 text-forest-muted" />
+              Department Assignment
+            </span>
+            <span className="font-bold text-forest text-base">{user?.department || 'Unassigned'}</span>
           </div>
 
-          <div className="border-t border-gray-200 pt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Two-Factor Authentication
-            </label>
-            <p className="text-gray-600 mb-3">Not enabled</p>
-            <button className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
-              Enable 2FA
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Notification Settings */}
-      <Card>
-        <CardHeader border={true}>
-          <div className="flex items-center gap-3">
-            <Bell className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-gray-900">
-              Notifications
-            </h2>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {[
-            {
-              name: 'Email Notifications',
-              description: 'Receive updates about processed contracts',
-              enabled: true,
-            },
-            {
-              name: 'High Risk Alerts',
-              description: 'Get notified when high-risk contracts are detected',
-              enabled: true,
-            },
-            {
-              name: 'Renewal Reminders',
-              description:
-                'Receive reminders for contracts expiring soon',
-              enabled: false,
-            },
-            {
-              name: 'Sync Updates',
-              description: 'Get notified when inbox sync completes',
-              enabled: true,
-            },
-          ].map((notification, idx) => (
-            <div
-              key={idx}
-              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
-            >
-              <div>
-                <p className="font-medium text-gray-900">{notification.name}</p>
-                <p className="text-sm text-gray-600">
-                  {notification.description}
-                </p>
-              </div>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  defaultChecked={notification.enabled}
-                  className="w-5 h-5 rounded border-gray-300 text-primary"
-                />
-              </label>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Account Section */}
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader border={true} className="border-red-200">
-          <div className="flex items-center gap-3">
-            <LogOut className="w-5 h-5 text-red-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Account</h2>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Account Email
-            </label>
-            <p className="text-gray-900 font-medium">{user?.email || 'No email'}</p>
+          <div className="p-4 bg-canvas rounded-2xl border border-subtleBorder space-y-1">
+            <span className="text-mutedText block flex items-center gap-1.5 font-bold uppercase text-[10px]">
+              <Shield className="w-3.5 h-3.5 text-forest-muted" />
+              System Authorization Role
+            </span>
+            <span className="font-bold text-forest text-base">{user?.role || 'REQUESTER'}</span>
           </div>
 
-          <div className="border-t border-red-200 pt-6">
-            <p className="text-sm text-red-900 mb-3">
-              Deleting your account is permanent and cannot be undone.
-            </p>
-            <button className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
-              Delete Account
-            </button>
+          <div className="p-4 bg-canvas rounded-2xl border border-subtleBorder space-y-1">
+            <span className="text-mutedText block flex items-center gap-1.5 font-bold uppercase text-[10px]">
+              <BadgeCheck className="w-3.5 h-3.5 text-forest" />
+              Employee Registry Status
+            </span>
+            <span className="font-bold text-forest text-base">Verified & Active</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Security Assurance Banner */}
+        <div className="p-4 bg-mint-light border border-sage/60 rounded-2xl text-xs text-forest space-y-1">
+          <strong className="font-bold block">Employee Verification Security:</strong>
+          <p className="text-forest-muted">
+            Your profile details and permissions ({user?.role}) are strictly authenticated against the enterprise Employee Registry database.
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

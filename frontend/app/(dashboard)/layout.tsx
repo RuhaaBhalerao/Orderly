@@ -14,36 +14,33 @@ export default function DashboardLayout({
   const router = useRouter()
   const { isAuthenticated, isLoading } = useAuth()
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push('/')
     }
   }, [isAuthenticated, isLoading, router])
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="flex h-screen items-center justify-center bg-canvas text-bodyText">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-forest border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-mutedText text-xs font-semibold">Loading Orderly Workspace...</p>
         </div>
       </div>
     )
   }
 
-  // Don't render dashboard if not authenticated
   if (!isAuthenticated) {
     return null
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-canvas text-bodyText overflow-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-canvas p-6 sm:p-8 space-y-8">{children}</main>
       </div>
     </div>
   )

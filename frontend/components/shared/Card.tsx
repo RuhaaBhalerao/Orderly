@@ -15,16 +15,16 @@ export function Card({
 }: CardProps) {
   const shadowClasses = {
     none: '',
-    sm: 'shadow-card',
-    md: 'shadow-md',
-    lg: 'shadow-lg',
+    sm: 'shadow-subtle',
+    md: 'shadow-card',
+    lg: 'shadow-floating',
   }
 
   return (
     <div
       className={cn(
-        'bg-white rounded-lg',
-        border && 'border border-gray-200',
+        'bg-white rounded-2xl transition-all duration-200',
+        border && 'border border-subtleBorder',
         shadowClasses[shadow],
         className
       )}
@@ -48,8 +48,8 @@ export function CardHeader({
   return (
     <div
       className={cn(
-        'px-6 py-4',
-        border && 'border-b border-gray-200',
+        'px-6 py-4.5',
+        border && 'border-b border-subtleBorder',
         className
       )}
     >
@@ -64,7 +64,7 @@ interface CardContentProps {
 }
 
 export function CardContent({ children, className }: CardContentProps) {
-  return <div className={cn('px-6 py-4', className)}>{children}</div>
+  return <div className={cn('px-6 py-5', className)}>{children}</div>
 }
 
 interface CardFooterProps {
@@ -82,7 +82,7 @@ export function CardFooter({
     <div
       className={cn(
         'px-6 py-4',
-        border && 'border-t border-gray-200',
+        border && 'border-t border-subtleBorder',
         className
       )}
     >

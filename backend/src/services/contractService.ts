@@ -1,201 +1,139 @@
 import { prisma } from '../lib/prisma';
-import { AiAnalysisResponse } from '../types/aiAnalysis';
 
 export interface CreateContractPayload {
-  title: string;
-  vendor: string;
-  status: string;
-  riskLevel: string;
-  summary?: string;
-  contractType: string;
-  effectiveDate: string;
+  contractName: string;
+  supplierId?: string;
+  purchaseOrderId?: string;
+  contractValue: number;
+  startDate: string;
   expiryDate: string;
-  pdfPath?: string;
+  renewalDate?: string;
+  notes?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileType?: string;
+  fileSize?: number;
 }
 
-export interface UpdateContractPayload extends CreateContractPayload {}
+function calculateContractStatus(expiryDateStr: string): string {
+  const expiry = new Date(expiryDateStr);
+  const now = new Date();
+  const daysUntilExpiry = (expiry.getTime() - now.getTime()) / (1000 * 3600 * 24);
 
-/**
- * Get all contracts for a user
- */
-export async function getContractsByUserId(userId: string) {
+  if (daysUntilExpiry < 0) {
+    return 'EXPIRED';
+  } else if (daysUntilExpiry <= 30) {
+    return 'EXPIRING_SOON';
+  }
+  return 'ACTIVE';
+}
+
+export async function getContracts(userId: string, userRole: string) {
+  const where: any = {};
+  if (userRole === 'REQUESTER') {
+    where.userId = userId;
+  }
+
   const contracts = await prisma.contract.findMany({
-    where: { userId },
+    where,
+    include: {
+      supplier: { select: { id: true, name: true, contactPerson: true } },
+      purchaseOrder: { select: { id: true, poNumber: true, totalAmount: true } },
+      user: { select: { id: true, name: true, email: true } },
+    },
     orderBy: { createdAt: 'desc' },
   });
 
-  return contracts;
+  // Re-calculate dynamic status based on current date
+  return contracts.map((c) => {
+    const dynamicStatus = calculateContractStatus(c.expiryDate.toISOString());
+    return { ...c, status: dynamicStatus };
+  });
 }
 
-/**
- * Get a single contract by ID (with user ownership verification)
- */
-export async function getContractById(contractId: string, userId: string) {
-  const contract = await prisma.contract.findFirst({
-    where: {
-      id: contractId,
-      userId,
+export async function getContractById(contractId: string) {
+  const contract = await prisma.contract.findUnique({
+    where: { id: contractId },
+    include: {
+      supplier: true,
+      purchaseOrder: true,
+      user: { select: { id: true, name: true, email: true } },
     },
   });
 
   if (!contract) {
-    throw {
-      status: 404,
-      message: 'Contract not found or does not belong to user',
-    };
+    throw { status: 404, message: 'Contract not found' };
   }
 
-  return contract;
+  const dynamicStatus = calculateContractStatus(contract.expiryDate.toISOString());
+  return { ...contract, status: dynamicStatus };
 }
 
-/**
- * Create a new contract
- */
-export async function createContract(
-  userId: string,
-  payload: CreateContractPayload
-) {
+export async function createContract(userId: string, payload: CreateContractPayload) {
+  const status = calculateContractStatus(payload.expiryDate);
+
   const contract = await prisma.contract.create({
     data: {
       userId,
-      title: payload.title,
-      vendor: payload.vendor,
-      status: payload.status,
-      riskLevel: payload.riskLevel,
-      summary: payload.summary || null,
-      contractType: payload.contractType,
-      effectiveDate: new Date(payload.effectiveDate),
+      contractName: payload.contractName,
+      supplierId: payload.supplierId || null,
+      purchaseOrderId: payload.purchaseOrderId || null,
+      contractValue: Number(payload.contractValue) || 0,
+      startDate: new Date(payload.startDate),
       expiryDate: new Date(payload.expiryDate),
-      pdfPath: payload.pdfPath || null,
+      renewalDate: payload.renewalDate ? new Date(payload.renewalDate) : null,
+      status,
+      fileName: payload.fileName,
+      fileUrl: payload.fileUrl,
+      fileType: payload.fileType,
+      fileSize: payload.fileSize ? Number(payload.fileSize) : null,
+      notes: payload.notes,
+    },
+    include: {
+      supplier: true,
+      purchaseOrder: true,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId,
+      action: 'CONTRACT_CREATED',
+      entityType: 'Contract',
+      entityId: contract.id,
+      metadata: { contractName: contract.contractName, contractValue: contract.contractValue },
     },
   });
 
   return contract;
 }
 
-/**
- * Update a contract (with user ownership verification)
- */
-export async function updateContract(
-  contractId: string,
-  userId: string,
-  payload: UpdateContractPayload
-) {
-  // Verify ownership
-  const contract = await prisma.contract.findFirst({
-    where: {
-      id: contractId,
-      userId,
-    },
-  });
-
-  if (!contract) {
-    throw {
-      status: 404,
-      message: 'Contract not found or does not belong to user',
-    };
-  }
-
-  // Update contract
-  const updated = await prisma.contract.update({
-    where: { id: contractId },
-    data: {
-      title: payload.title,
-      vendor: payload.vendor,
-      status: payload.status,
-      riskLevel: payload.riskLevel,
-      summary: payload.summary || null,
-      contractType: payload.contractType,
-      effectiveDate: new Date(payload.effectiveDate),
-      expiryDate: new Date(payload.expiryDate),
-      pdfPath: payload.pdfPath || null,
-    },
-  });
-
-  return updated;
-}
-
-/**
- * Save contract analysis results
- * Updates contract with AI-extracted data
- */
-export async function saveContractAnalysis(
-  contractId: string,
-  analysis: AiAnalysisResponse
-) {
-  const updated = await prisma.contract.update({
-    where: { id: contractId },
-    data: {
-      aiSummary: analysis.summary,
-      aiContractType: analysis.contractType,
-      aiVendor: analysis.vendor,
-      aiEffectiveDate: analysis.effectiveDate ? new Date(analysis.effectiveDate) : null,
-      aiExpiryDate: analysis.expiryDate ? new Date(analysis.expiryDate) : null,
-      aiRiskLevel: analysis.riskLevel,
-      aiKeyTerms: analysis.keyTerms,
-      aiRisks: analysis.risks,
-      aiRecommendations: analysis.recommendations,
-      analysisStatus: 'COMPLETED',
-      analysisError: null,
-    },
-  });
-
-  return updated;
-}
-
-/**
- * Update contract analysis status
- */
-export async function updateContractAnalysisStatus(
-  contractId: string,
-  status: 'PENDING' | 'COMPLETED' | 'FAILED',
-  error: string | null = null
-) {
-  return await prisma.contract.update({
-    where: { id: contractId },
-    data: {
-      analysisStatus: status,
-      analysisError: error,
-    },
-  });
-}
-
-/**
- * Delete a contract (with user ownership verification)
- */
 export async function deleteContract(contractId: string, userId: string) {
-  // Verify ownership
-  const contract = await prisma.contract.findFirst({
-    where: {
-      id: contractId,
+  const contract = await prisma.contract.findUnique({ where: { id: contractId } });
+  if (!contract) {
+    throw { status: 404, message: 'Contract not found' };
+  }
+
+  await prisma.contract.delete({ where: { id: contractId } });
+
+  await prisma.auditLog.create({
+    data: {
       userId,
+      action: 'CONTRACT_DELETED',
+      entityType: 'Contract',
+      entityId: contractId,
+      metadata: { contractName: contract.contractName },
     },
   });
 
-  if (!contract) {
-    throw {
-      status: 404,
-      message: 'Contract not found or does not belong to user',
-    };
-  }
-
-  // Delete contract (chat history will cascade delete)
-  await prisma.contract.delete({
-    where: { id: contractId },
-  });
-
-  // Delete associated PDF file if it exists
-  if (contract.pdfPath) {
+  if (contract.fileName) {
     try {
-      // Extract filename from pdfPath (e.g., /uploads/contracts/uuid.pdf -> uuid.pdf)
-      const filename = contract.pdfPath.split('/').pop();
-      if (filename) {
-        const { deleteUploadedFile } = await import('../middleware/uploadMiddleware');
-        await deleteUploadedFile(filename);
-      }
-    } catch (error) {
-      console.error('Error deleting PDF file:', error);
-      // Don't throw - contract was already deleted from DB
+      const { deleteUploadedFile } = await import('../middleware/uploadMiddleware');
+      await deleteUploadedFile(contract.fileName);
+    } catch (err) {
+      console.error('Error removing file:', err);
     }
   }
+
+  return { message: 'Contract deleted successfully' };
 }

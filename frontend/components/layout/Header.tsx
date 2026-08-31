@@ -1,70 +1,74 @@
 'use client'
 
-import { useToast } from '@/lib/toast'
 import { useAuth } from '@/hooks/useAuth'
-import { Mail, RotateCw, Bell } from 'lucide-react'
-import { useState } from 'react'
+import { Bell } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { notificationAPI } from '@/lib/api'
 
 export function Header() {
-  const { addToast } = useToast()
   const { user } = useAuth()
-  const [isSyncing, setIsSyncing] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
 
-  const handleSync = async () => {
-    setIsSyncing(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      addToast('Successfully synced 3 contracts', 'success')
-    } catch (error) {
-      addToast('Failed to sync contracts', 'error')
-    } finally {
-      setIsSyncing(false)
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await notificationAPI.getAll()
+        if (res.data) {
+          const unread = res.data.filter((n: any) => !n.isRead).length
+          setUnreadCount(unread)
+        }
+      } catch (err) {
+        // silent fallback
+      }
     }
-  }
+
+    fetchNotifications()
+  }, [])
 
   return (
-    <header className="bg-white border-b border-gray-100 px-8 py-6">
-      <div className="flex items-center justify-between">
-        {/* Welcome Section */}
+    <header
+      className="px-8 py-4 z-10 shadow-sm border-b"
+      style={{ backgroundColor: '#FFFFFF', borderColor: '#DCE3DF', color: '#16231F' }}
+    >
+      <div className="flex items-center justify-between gap-4">
+        {/* Welcome Title */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user?.name?.split(' ')[0] || 'User'} 👋
+          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2" style={{ color: '#173F32' }}>
+            Welcome back, {user?.name?.split(' ')[0] || 'User'}
           </h1>
-          <p className="text-base text-gray-600 mt-2">
-            Here&apos;s what&apos;s happening with your procurement workflow today.
+          <p className="text-xs font-medium mt-0.5" style={{ color: '#63736D' }}>
+            Procurement Management Platform
           </p>
         </div>
 
-        {/* Header Actions */}
+        {/* Minimal Actions: Notifications & Simple Profile Entry Point */}
         <div className="flex items-center gap-3">
-          {/* Notifications */}
-          <button className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
-          </button>
-
-          {/* Gmail Status */}
-          <div className="flex items-center gap-3 px-4 py-2.5 bg-gradient-subtle rounded-lg border border-gray-200">
-            <Mail className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-gray-700">Gmail Connected</span>
-            <span className="w-2 h-2 bg-success rounded-full animate-pulse"></span>
-          </div>
-
-          {/* Sync Button */}
-          <button
-            onClick={handleSync}
-            disabled={isSyncing}
-            className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm hover:shadow-md"
+          {/* Notifications Icon */}
+          <Link
+            href="/notifications"
+            className="p-2.5 rounded-xl transition-all relative border"
+            style={{ backgroundColor: '#F7F7F2', borderColor: '#DCE3DF' }}
+            title="Notifications"
           >
-            <RotateCw
-              className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`}
-            />
-            {isSyncing ? 'Syncing...' : 'Sync Inbox'}
-          </button>
+            <Bell className="w-4 h-4" style={{ color: '#173F32' }} />
+            {unreadCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 w-4 h-4 text-white rounded-full text-[9px] font-bold flex items-center justify-center border"
+                style={{ backgroundColor: '#173F32', borderColor: '#FFFFFF' }}
+              >
+                {unreadCount}
+              </span>
+            )}
+          </Link>
 
-          {/* Profile Avatar */}
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center text-white font-bold shadow-md text-xs">
+          {/* Simple Profile Entry Point Avatar */}
+          <Link
+            href="/settings"
+            className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shadow-sm text-white transition-transform hover:scale-105"
+            style={{ backgroundColor: '#173F32' }}
+            title="View Profile"
+          >
             {user?.name
               ? user.name
                   .split(' ')
@@ -72,7 +76,7 @@ export function Header() {
                   .join('')
                   .toUpperCase()
               : 'U'}
-          </div>
+          </Link>
         </div>
       </div>
     </header>

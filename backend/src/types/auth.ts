@@ -6,17 +6,23 @@ import { Request } from 'express';
 export interface AuthRequest extends Request {
   userId?: string;
   userEmail?: string;
+  userRole?: string;
+  userDepartment?: string;
+  employeeId?: string;
 }
 
 /**
- * Auth response structure (matches frontend expectations)
+ * Auth response structure
  */
 export interface AuthResponse {
   token: string;
   user: {
     id: string;
+    employeeId: string;
     name: string;
     email: string;
+    role: string;
+    department: string;
   };
 }
 
@@ -25,8 +31,10 @@ export interface AuthResponse {
  */
 export interface RegisterPayload {
   name: string;
+  employeeId: string;
   email: string;
   password: string;
+  role: string; // REQUESTER, MANAGER, PROCUREMENT_OFFICER
 }
 
 /**

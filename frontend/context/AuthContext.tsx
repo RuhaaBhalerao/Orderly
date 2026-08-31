@@ -2,12 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { authAPI, getToken, getUser } from '@/lib/api'
-
-interface User {
-  id: string
-  name: string
-  email: string
-}
+import { User } from '@/types'
 
 interface AuthContextType {
   user: User | null
@@ -15,7 +10,13 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<{ error?: string }>
-  register: (name: string, email: string, password: string) => Promise<{ error?: string }>
+  register: (
+    name: string,
+    employeeId: string,
+    email: string,
+    password: string,
+    role: string
+  ) => Promise<{ error?: string }>
   logout: () => void
 }
 
@@ -28,17 +29,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Initialize auth state from localStorage
   useEffect(() => {
-    const storedToken = getToken()
-    const storedUser = getUser()
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(storedUser)
+    const initAuth = async () => {
+      const storedToken = getToken()
+      const storedUser = getUser()
+      
+      if (storedToken && storedUser) {
+        setToken(storedToken)
+        setUser(storedUser)
+      }
+      setIsLoading(false)
     }
-    
-    setIsLoading(false)
+
+    initAuth()
   }, [])
 
   const login = async (email: string, password: string) => {
@@ -49,7 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: response.error }
       }
 
-      // Token is already stored by authAPI.login
       setToken(getToken())
       setUser(getUser())
       
@@ -60,15 +62,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (
+    name: string,
+    employeeId: string,
+    email: string,
+    password: string,
+    role: string
+  ) => {
     try {
-      const response = await authAPI.register(name, email, password)
+      const response = await authAPI.register(name, employeeId, email, password, role)
       
       if (response.error) {
         return { error: response.error }
       }
 
-      // Token is already stored by authAPI.register
       setToken(getToken())
       setUser(getUser())
       

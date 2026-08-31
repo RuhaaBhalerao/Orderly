@@ -3,9 +3,14 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
 import authRoutes from './routes/authRoutes';
+import purchaseRequestRoutes from './routes/purchaseRequestRoutes';
+import supplierRoutes from './routes/supplierRoutes';
+import purchaseOrderRoutes from './routes/purchaseOrderRoutes';
 import contractRoutes from './routes/contractRoutes';
-import chatRoutes from './routes/chatRoutes';
-import gmailRoutes from './routes/gmailRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
+import notificationRoutes from './routes/notificationRoutes';
+import auditLogRoutes from './routes/auditLogRoutes';
 import { errorMiddleware } from './middleware/errorMiddleware';
 import { ensureUploadDirectory } from './middleware/uploadMiddleware';
 
@@ -26,8 +31,8 @@ function validateEnvironment() {
     errors.push('JWT_SECRET is not configured or too short (minimum 16 characters required)');
   }
   
-  if (!process.env.OPENROUTER_API_KEY) {
-    console.warn('⚠️  WARNING: OPENROUTER_API_KEY is not configured. AI features will be unavailable.');
+  if (!process.env.OPENROUTER_API_KEY && !process.env.GEMINI_API_KEY) {
+    console.warn('⚠️  INFO: AI API keys not configured. Optional AI supplier recommendations will use deterministic fallbacks.');
   }
   
   if (errors.length > 0) {
@@ -61,7 +66,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // CORS configuration
 app.use(
   cors({
-    origin: [FRONTEND_URL, 'http://localhost:3001'],
+    origin: [FRONTEND_URL, 'http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -71,11 +76,20 @@ app.use(
 // Serve static uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// Health check endpoint
+// Health check endpoints
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ 
     status: 'ok', 
-    message: 'Backend is running',
+    message: 'Orderly Backend is running',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/health', (req: Request, res: Response) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Orderly Backend is running',
     environment: NODE_ENV,
     timestamp: new Date().toISOString()
   });
@@ -83,9 +97,14 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/purchase-requests', purchaseRequestRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/api/purchase-orders', purchaseOrderRoutes);
 app.use('/api/contracts', contractRoutes);
-app.use('/api/contracts/:contractId/chat', chatRoutes);
-app.use('/api/gmail', gmailRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -104,7 +123,7 @@ app.use(errorMiddleware);
 app.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║       Procure AI Backend - Node.js + Express             ║
+║       ProcureAI Backend - Node.js + Express              ║
 ╠══════════════════════════════════════════════════════════╣
 ║ ✅ Server running on port ${PORT}                        ║
 ║ 📍 Environment: ${NODE_ENV}                               ║
@@ -112,10 +131,9 @@ app.listen(PORT, () => {
 ║ 🗄️  Database: PostgreSQL (Neon)                          ║
 ║ 🏥 Health: http://localhost:${PORT}/health              ║
 ║ 📁 Uploads: /uploads/contracts/                          ║
-║ 📧 Gmail: ${process.env.GOOGLE_CLIENT_ID ? '✅ Configured' : '⚠️  Not configured'}                             ║
-║ 🤖 AI Service: ${process.env.OPENROUTER_API_KEY ? '✅ Configured' : '⚠️  Not configured'}                      ║
 ╚══════════════════════════════════════════════════════════╝
   `);
 });
 
 export default app;
+

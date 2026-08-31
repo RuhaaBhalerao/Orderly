@@ -1,38 +1,26 @@
 /**
- * Frontend API Utility
- * Centralized fetch wrapper with:
- * - Authorization headers
- * - Token management (localStorage)
- * - Error handling
- * - Request/response typing
+ * Orderly Frontend API Utility
+ * - Unified Axios instance with auth interceptor
+ * - Automatic token injection & error normalization
+ * - Comprehensive Orderly endpoints
  */
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-// Token key for localStorage
 const TOKEN_KEY = 'procure_ai_token';
 const USER_KEY = 'procure_ai_user';
 
-/**
- * Get stored JWT token from localStorage
- */
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
-/**
- * Store JWT token in localStorage
- */
 export function setToken(token: string): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(TOKEN_KEY, token);
   }
 }
 
-/**
- * Clear stored token (logout)
- */
 export function clearToken(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(TOKEN_KEY);
@@ -40,34 +28,22 @@ export function clearToken(): void {
   }
 }
 
-/**
- * Store user info
- */
 export function setUser(user: any): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 }
 
-/**
- * Get stored user info
- */
 export function getUser(): any | null {
   if (typeof window === 'undefined') return null;
   const user = localStorage.getItem(USER_KEY);
   return user ? JSON.parse(user) : null;
 }
 
-/**
- * API request interface
- */
 interface ApiRequestOptions extends RequestInit {
-  skipAuth?: boolean; // Don't add Authorization header
+  skipAuth?: boolean;
 }
 
-/**
- * API response interface
- */
 interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -75,10 +51,6 @@ interface ApiResponse<T> {
   status: number;
 }
 
-/**
- * Generic API request function
- * Handles authentication, error parsing, and response typing
- */
 export async function apiRequest<T = any>(
   endpoint: string,
   options: ApiRequestOptions = {}
@@ -91,7 +63,6 @@ export async function apiRequest<T = any>(
     ...fetchOptions.headers,
   } as Record<string, string>;
 
-  // Add authorization header unless explicitly skipped
   if (!skipAuth) {
     const token = getToken();
     if (token) {
@@ -114,7 +85,6 @@ export async function apiRequest<T = any>(
       body = await response.text();
     }
 
-    // Success response
     if (response.ok) {
       return {
         data: body,
@@ -122,9 +92,8 @@ export async function apiRequest<T = any>(
       };
     }
 
-    // Error response
     return {
-      error: body?.error || body?.message || 'Unknown error',
+      error: body?.message || body?.error || 'Request failed',
       message: body?.message,
       status: response.status,
     };
@@ -138,16 +107,13 @@ export async function apiRequest<T = any>(
 }
 
 /**
- * Authentication API calls
+ * Auth API
  */
 export const authAPI = {
-  /**
-   * Register new user
-   */
-  register: async (name: string, email: string, password: string) => {
+  register: async (name: string, employeeId: string, email: string, password: string, role: string) => {
     const response = await apiRequest('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, employeeId, email, password, role }),
       skipAuth: true,
     });
 
@@ -159,9 +125,6 @@ export const authAPI = {
     return response;
   },
 
-  /**
-   * Login user
-   */
   login: async (email: string, password: string) => {
     const response = await apiRequest('/auth/login', {
       method: 'POST',
@@ -177,80 +140,148 @@ export const authAPI = {
     return response;
   },
 
-  /**
-   * Get current user
-   */
   me: async () => {
-    return apiRequest('/auth/me', {
-      method: 'GET',
-    });
+    return apiRequest('/auth/me', { method: 'GET' });
   },
 
-  /**
-   * Logout
-   */
   logout: () => {
     clearToken();
   },
 };
 
 /**
- * Contract API calls
+ * Purchase Request API
  */
-export const contractAPI = {
-  /**
-   * Get all contracts for user
-   */
-  getAll: async () => {
-    return apiRequest('/contracts', {
-      method: 'GET',
-    });
+export const purchaseRequestAPI = {
+  getAll: async (params?: { search?: string; status?: string; priority?: string; department?: string }) => {
+    const query = new URLSearchParams(params as any).toString();
+    return apiRequest(`/purchase-requests?${query}`, { method: 'GET' });
   },
 
-  /**
-   * Get single contract by ID
-   */
-  getById: async (contractId: string) => {
-    return apiRequest(`/contracts/${contractId}`, {
-      method: 'GET',
-    });
+  getById: async (id: string) => {
+    return apiRequest(`/purchase-requests/${id}`, { method: 'GET' });
   },
 
-  /**
-   * Create new contract
-   */
   create: async (data: {
     title: string;
-    vendor: string;
-    contractType: string;
-    status: string;
-    riskLevel: string;
-    effectiveDate: string;
-    expiryDate: string;
+    description: string;
+    category: string;
+    quantity: number;
+    estimatedBudget: number;
+    priority?: string;
+    requiredByDate: string;
   }) => {
-    return apiRequest('/contracts', {
+    return apiRequest('/purchase-requests', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  /**
-   * Update contract
-   */
-  update: async (contractId: string, data: any) => {
-    return apiRequest(`/contracts/${contractId}`, {
-      method: 'PUT',
+  approve: async (id: string, comment?: string) => {
+    return apiRequest(`/purchase-requests/${id}/approve`, {
+      method: 'POST',
+      body: JSON.stringify({ comment }),
+    });
+  },
+
+  reject: async (id: string, comment?: string) => {
+    return apiRequest(`/purchase-requests/${id}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ comment }),
+    });
+  },
+
+  compareSuppliers: async (id: string) => {
+    return apiRequest(`/purchase-requests/${id}/compare-suppliers`, {
+      method: 'POST',
+    });
+  },
+
+  selectSupplier: async (id: string, supplierId: string, reason?: string) => {
+    return apiRequest(`/purchase-requests/${id}/select-supplier`, {
+      method: 'POST',
+      body: JSON.stringify({ supplierId, reason }),
+    });
+  },
+};
+
+/**
+ * Supplier API
+ */
+export const supplierAPI = {
+  getAll: async (params?: { search?: string; category?: string; status?: string }) => {
+    const query = new URLSearchParams(params as any).toString();
+    return apiRequest(`/suppliers?${query}`, { method: 'GET' });
+  },
+
+  getById: async (id: string) => {
+    return apiRequest(`/suppliers/${id}`, { method: 'GET' });
+  },
+
+  create: async (data: any) => {
+    return apiRequest('/suppliers', {
+      method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  /**
-   * Upload PDF for contract
-   */
-  uploadPdf: async (contractId: string, file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
+  update: async (id: string, data: any) => {
+    return apiRequest(`/suppliers/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+};
 
+/**
+ * Purchase Order API
+ */
+export const purchaseOrderAPI = {
+  getAll: async (params?: { search?: string; status?: string; supplierId?: string }) => {
+    const query = new URLSearchParams(params as any).toString();
+    return apiRequest(`/purchase-orders?${query}`, { method: 'GET' });
+  },
+
+  getById: async (id: string) => {
+    return apiRequest(`/purchase-orders/${id}`, { method: 'GET' });
+  },
+
+  create: async (data: {
+    purchaseRequestId: string;
+    supplierId: string;
+    expectedDeliveryDate: string;
+    paymentTerms?: string;
+    shippingInformation?: string;
+    notes?: string;
+    items: { description: string; quantity: number; unitPrice: number }[];
+  }) => {
+    return apiRequest('/purchase-orders', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateStatus: async (id: string, status: string) => {
+    return apiRequest(`/purchase-orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+};
+
+/**
+ * Contract API
+ */
+export const contractAPI = {
+  getAll: async () => {
+    return apiRequest('/contracts', { method: 'GET' });
+  },
+
+  getById: async (id: string) => {
+    return apiRequest(`/contracts/${id}`, { method: 'GET' });
+  },
+
+  create: async (formData: FormData) => {
     const token = getToken();
     const headers: Record<string, string> = {};
     if (token) {
@@ -258,104 +289,59 @@ export const contractAPI = {
     }
 
     try {
-      const response = await fetch(`${API_URL}/contracts/${contractId}/upload`, {
+      const response = await fetch(`${API_URL}/contracts`, {
         method: 'POST',
         headers,
         body: formData,
       });
 
+      const body = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        return {
-          error: error?.message || 'Upload failed',
-          status: response.status,
-        };
+        return { error: body?.message || 'Failed to create contract', status: response.status };
       }
-
-      const data = await response.json();
-      return {
-        data,
-        status: response.status,
-      };
+      return { data: body, status: response.status };
     } catch (err) {
-      return {
-        error: err instanceof Error ? err.message : 'Upload failed',
-        status: 0,
-      };
+      return { error: err instanceof Error ? err.message : 'Upload failed', status: 0 };
     }
   },
 
-  /**
-   * Analyze contract (runs AI extraction)
-   */
-  analyze: async (contractId: string) => {
-    return apiRequest(`/contracts/${contractId}/analyze`, {
-      method: 'POST',
-    });
+  delete: async (id: string) => {
+    return apiRequest(`/contracts/${id}`, { method: 'DELETE' });
   },
 };
 
 /**
- * Chat API calls
+ * Dashboard & Analytics API
  */
-export const chatAPI = {
-  /**
-   * Get chat history for a contract
-   */
-  getHistory: async (contractId: string) => {
-    return apiRequest(`/contracts/${contractId}/chat`, {
-      method: 'GET',
-    });
+export const dashboardAPI = {
+  getMetrics: async () => {
+    return apiRequest('/dashboard', { method: 'GET' });
   },
+};
 
-  /**
-   * Send message and get AI response
-   */
-  sendMessage: async (contractId: string, userMessage: string) => {
-    return apiRequest(`/contracts/${contractId}/chat`, {
-      method: 'POST',
-      body: JSON.stringify({ userMessage }),
-    });
+export const analyticsAPI = {
+  getMetrics: async () => {
+    return apiRequest('/analytics', { method: 'GET' });
   },
 };
 
 /**
- * Gmail API calls (Phase 6)
+ * Notifications & Audit Logs API
  */
-export const gmailAPI = {
-  /**
-   * Get Gmail OAuth authorization URL
-   */
-  getAuthUrl: async () => {
-    return apiRequest('/gmail/auth', {
-      method: 'GET',
-    });
+export const notificationAPI = {
+  getAll: async () => {
+    return apiRequest('/notifications', { method: 'GET' });
   },
-
-  /**
-   * Get Gmail connection status
-   */
-  getStatus: async () => {
-    return apiRequest('/gmail/status', {
-      method: 'GET',
-    });
+  markAsRead: async (id: string) => {
+    return apiRequest(`/notifications/${id}/read`, { method: 'PATCH' });
   },
-
-  /**
-   * Trigger inbox sync
-   */
-  syncInbox: async () => {
-    return apiRequest('/gmail/sync', {
-      method: 'POST',
-    });
+  markAllAsRead: async () => {
+    return apiRequest('/notifications/read-all', { method: 'POST' });
   },
+};
 
-  /**
-   * Disconnect Gmail
-   */
-  disconnect: async () => {
-    return apiRequest('/gmail/disconnect', {
-      method: 'POST',
-    });
+export const auditLogAPI = {
+  getAll: async () => {
+    return apiRequest('/audit-logs', { method: 'GET' });
   },
 };

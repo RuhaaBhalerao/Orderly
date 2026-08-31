@@ -1,8 +1,7 @@
 import { validateAiResponseSafe, AiAnalysisResponse } from '../types/aiAnalysis';
 
 /**
- * Maximum text length to send to OpenRouter (tokens)
- * This is a safety limit to prevent excessive token usage and timeouts
+ * Maximum text length to send to AI models (tokens)
  * Roughly 1 token ≈ 4 characters
  */
 const MAX_TEXT_LENGTH = 100000; // ~25,000 tokens
@@ -45,15 +44,29 @@ Your response must be valid JSON matching this exact structure:
 Return ONLY valid JSON. Do not include explanatory text before or after the JSON.`;
 
 /**
+ * System prompt for conversational chat about contracts
+ */
+const CHAT_SYSTEM_PROMPT = `You are a helpful procurement contract assistant. Your role is to answer questions about contracts using ONLY the information provided to you.
+
+IMPORTANT RULES:
+1. Answer ONLY using the provided contract content. Never invent information or use outside knowledge.
+2. If the contract does not contain the answer to a question, clearly state: "The contract does not contain this information."
+3. Quote relevant contract sections when possible to support your answer.
+4. Explain clauses in business-friendly language.
+5. Do NOT provide legal advice - say "Please consult with legal counsel" if the question is about legal implications.
+6. Be concise but thorough.
+7. If asked about something outside the contract's scope, redirect to what information IS available.
+
+You are helping a procurement professional understand their contracts quickly and accurately.`;
+
+/**
  * Truncates extracted text to a safe length
- * Handles truncation at word boundaries to avoid cutting mid-word
  */
 function truncateText(text: string, maxLength: number): { text: string; truncated: boolean } {
   if (text.length <= maxLength) {
     return { text, truncated: false };
   }
 
-  // Find the last space within the limit
   const truncated = text.substring(0, maxLength);
   const lastSpace = truncated.lastIndexOf(' ');
   const finalLength = lastSpace > maxLength * 0.8 ? lastSpace : maxLength;
@@ -65,8 +78,111 @@ function truncateText(text: string, maxLength: number): { text: string; truncate
 }
 
 /**
- * Analyzes a contract using OpenRouter API
- * Sends extracted text to the AI model and returns structured analysis
+ * Calls LLM via OpenRouter or Google Gemini API depending on available credentials
+ */
+async function callLLM(
+  systemPrompt: string,
+  userContent: string,
+  temperature = 0.3,
+  maxTokens = 4096,
+  jsonMode = false
+): Promise<string> {
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const model = process.env.OPENROUTER_MODEL || 'google/gemma-3-27b-it';
+
+  // Option 1: OpenRouter API if key provided
+  if (openRouterKey && openRouterKey.startsWith('sk-or-')) {
+    console.log(`[AI Service] Calling OpenRouter (${model})...`);
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${openRouterKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
+        ],
+        temperature,
+        max_tokens: maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({})) as any;
+      throw new Error(errorData.error?.message || `OpenRouter API error (${response.status})`);
+    }
+
+    const data = await response.json() as any;
+    const content = data.choices?.[0]?.message?.content || data.result?.choices?.[0]?.text;
+    if (!content) throw new Error('Empty content from OpenRouter');
+    return content;
+  }
+
+  // Option 2: Google Gemini API if GEMINI_API_KEY provided
+  if (geminiKey && geminiKey.length > 10) {
+    console.log('[AI Service] Calling Google Gemini API directly...');
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`;
+    
+    const generationConfig: any = {
+      temperature,
+      maxOutputTokens: maxTokens,
+    };
+    if (jsonMode) {
+      generationConfig.responseMimeType = 'application/json';
+    }
+
+    let response = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: `${systemPrompt}\n\n${userContent}` }
+            ]
+          }
+        ],
+        generationConfig
+      })
+    });
+
+    if (!response.ok) {
+      console.warn(`[AI Service] gemini-2.5-flash failed (${response.status}), trying gemini-1.5-flash fallback...`);
+      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
+      response = await fetch(fallbackUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: `${systemPrompt}\n\n${userContent}` }]
+            }
+          ],
+          generationConfig
+        })
+      });
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Gemini API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json() as any;
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('Empty text from Gemini API');
+    return text;
+  }
+
+  throw new Error('No valid AI API key configured (neither OPENROUTER_API_KEY nor GEMINI_API_KEY).');
+}
+
+/**
+ * Analyzes a contract using AI service
  */
 export async function analyzeContract(
   extractedText: string
@@ -77,7 +193,6 @@ export async function analyzeContract(
   textTruncated?: boolean;
 }> {
   try {
-    // Validate inputs
     if (!extractedText || extractedText.trim().length === 0) {
       return {
         success: false,
@@ -85,142 +200,33 @@ export async function analyzeContract(
       };
     }
 
-    // Check environment variables
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    const model = process.env.OPENROUTER_MODEL;
-
-    if (!apiKey) {
-      console.error('OPENROUTER_API_KEY not configured');
-      return {
-        success: false,
-        error: 'AI service not configured. Please set OPENROUTER_API_KEY in environment variables.',
-      };
-    }
-
-    if (!model) {
-      console.error('OPENROUTER_MODEL not configured');
-      return {
-        success: false,
-        error: 'AI model not configured. Please set OPENROUTER_MODEL in environment variables.',
-      };
-    }
-
-    console.log(`[AI Service] Starting analysis with model: ${model}`);
-
-    // Truncate text if necessary
+    console.log('[AI Service] Starting contract analysis...');
     const { text: truncatedText, truncated } = truncateText(extractedText, MAX_TEXT_LENGTH);
 
-    if (truncated) {
-      console.warn(
-        `[AI Service] Contract text truncated from ${extractedText.length} to ${truncatedText.length} characters`
-      );
-    }
+    const userPrompt = `Please analyze the following contract and return structured analysis:\n\n${truncatedText}`;
+    const aiResponseText = await callLLM(SYSTEM_PROMPT, userPrompt, 0.2, 4096, true);
 
-    // Prepare the request payload
-    const payload = {
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT,
-        },
-        {
-          role: 'user',
-          content: `Please analyze the following contract and return structured analysis:\n\n${truncatedText}`,
-        },
-      ],
-      temperature: 0.3, // Lower temperature for more consistent/deterministic responses
-      max_tokens: 2048, // Should be enough for the response
-    };
+    let cleanText = aiResponseText.trim();
+    cleanText = cleanText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
 
-    console.log(`[AI Service] Sending request to OpenRouter (${model})...`);
-
-    // Call OpenRouter API
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    // Handle API errors
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({})) as any;
-      const statusCode = response.status;
-      const errorMessage = errorData.error?.message || response.statusText;
-
-      console.error(`[AI Service] OpenRouter API error (${statusCode}):`, errorMessage);
-
-      // Handle specific error codes
-      if (statusCode === 429) {
-        return {
-          success: false,
-          error: 'AI service is currently rate-limited. Please try again in a moment.',
-        };
-      }
-
-      if (statusCode === 401 || statusCode === 403) {
-        return {
-          success: false,
-          error: 'AI service authentication failed. Please check API configuration.',
-        };
-      }
-
-      if (statusCode >= 500) {
-        return {
-          success: false,
-          error: 'AI service is temporarily unavailable. Please try again later.',
-        };
-      }
-
-      return {
-        success: false,
-        error: `AI service error: ${errorMessage}`,
-      };
-    }
-
-    // Parse response
-    const responseData = await response.json() as any;
-    console.log('[AI Service] Received response from OpenRouter');
-
-    // Extract the model's response
-    const aiResponseText =
-      responseData.choices?.[0]?.message?.content || responseData.result?.choices?.[0]?.text;
-
-    if (!aiResponseText) {
-      console.error('[AI Service] No content in API response');
-      return {
-        success: false,
-        error: 'Received empty response from AI service',
-      };
-    }
-
-    console.log('[AI Service] Parsing AI response...');
-
-    // Parse JSON from response
-    // The AI might return text with JSON embedded, so we try to extract it
     let jsonData: unknown;
-
     try {
-      // Try direct JSON parse first
-      jsonData = JSON.parse(aiResponseText);
+      jsonData = JSON.parse(cleanText);
     } catch {
-      // If that fails, try to find JSON in the response
-      const jsonMatch = aiResponseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+      const firstBrace = cleanText.indexOf('{');
+      const lastBrace = cleanText.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
         try {
-          jsonData = JSON.parse(jsonMatch[0]);
-        } catch {
-          console.error('[AI Service] Failed to parse JSON from response:', aiResponseText.substring(0, 200));
+          jsonData = JSON.parse(cleanText.substring(firstBrace, lastBrace + 1));
+        } catch (e: any) {
+          console.error('[AI Service] Substring JSON parse failed:', e.message, 'Raw text:', aiResponseText.substring(0, 300));
           return {
             success: false,
             error: 'Failed to parse AI response as JSON',
           };
         }
       } else {
-        console.error('[AI Service] No JSON found in response:', aiResponseText.substring(0, 200));
+        console.error('[AI Service] No braces found in text. Raw text:', aiResponseText.substring(0, 300));
         return {
           success: false,
           error: 'AI response did not contain valid JSON',
@@ -228,7 +234,6 @@ export async function analyzeContract(
       }
     }
 
-    // Validate response structure
     const validation = validateAiResponseSafe(jsonData);
 
     if (!validation.success) {
@@ -239,8 +244,7 @@ export async function analyzeContract(
       };
     }
 
-    console.log('[AI Service] Analysis complete and validated');
-
+    console.log('[AI Service] Contract analysis successful');
     return {
       success: true,
       analysis: validation.data,
@@ -248,17 +252,16 @@ export async function analyzeContract(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[AI Service] Unexpected error:', errorMessage);
+    console.error('[AI Service] Analysis error:', errorMessage);
     return {
       success: false,
-      error: `Unexpected error during analysis: ${errorMessage}`,
+      error: `AI Service Error: ${errorMessage}`,
     };
   }
 }
 
 /**
  * Formats analysis result for response
- * Converts database-stored analysis to API response format
  */
 export function formatAnalysisResponse(analysis: {
   aiSummary: string | null;
@@ -285,25 +288,7 @@ export function formatAnalysisResponse(analysis: {
 }
 
 /**
- * System prompt for conversational chat about contracts
- * Different from analysis prompt - focused on answering specific questions
- */
-const CHAT_SYSTEM_PROMPT = `You are a helpful procurement contract assistant. Your role is to answer questions about contracts using ONLY the information provided to you.
-
-IMPORTANT RULES:
-1. Answer ONLY using the provided contract content. Never invent information or use outside knowledge.
-2. If the contract does not contain the answer to a question, clearly state: "The contract does not contain this information."
-3. Quote relevant contract sections when possible to support your answer.
-4. Explain clauses in business-friendly language.
-5. Do NOT provide legal advice - say "Please consult with legal counsel" if the question is about legal implications.
-6. Be concise but thorough.
-7. If asked about something outside the contract's scope, redirect to what information IS available.
-
-You are helping a procurement professional understand their contracts quickly and accurately.`;
-
-/**
  * Generates a conversational AI response to a user question about a contract
- * Used for the chat Q&A functionality
  */
 export async function generateChatResponse(
   userQuestion: string,
@@ -315,7 +300,6 @@ export async function generateChatResponse(
   error?: string;
 }> {
   try {
-    // Validate inputs
     if (!userQuestion || userQuestion.trim().length === 0) {
       return {
         success: false,
@@ -330,135 +314,27 @@ export async function generateChatResponse(
       };
     }
 
-    // Check environment variables
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    const model = process.env.OPENROUTER_MODEL;
+    console.log('[Chat AI] Generating response for question...');
 
-    if (!apiKey) {
-      console.error('OPENROUTER_API_KEY not configured');
-      return {
-        success: false,
-        error: 'AI service not configured. Please set OPENROUTER_API_KEY in environment variables.',
-      };
-    }
+    const CONTRACT_CONTEXT_LIMIT = 30000;
+    const { text: truncatedText } = truncateText(contractText, CONTRACT_CONTEXT_LIMIT);
 
-    if (!model) {
-      console.error('OPENROUTER_MODEL not configured');
-      return {
-        success: false,
-        error: 'AI model not configured. Please set OPENROUTER_MODEL in environment variables.',
-      };
-    }
-
-    console.log(`[Chat AI] Generating response with model: ${model}`);
-
-    // Truncate contract text to fit in context window
-    // Leave space for: system prompt + summary + question + response
-    // Estimate: system=500 tokens, summary=200, question=100, response=500 = 1300 tokens reserved
-    // Model limit: 2048 tokens, so ~750 tokens available for contract text (~3000 chars)
-    const CONTRACT_CONTEXT_LIMIT = 30000; // ~7500 tokens
-    const { text: truncatedText, truncated } = truncateText(contractText, CONTRACT_CONTEXT_LIMIT);
-
-    if (truncated) {
-      console.warn(`[Chat AI] Contract text truncated from ${contractText.length} to ${truncatedText.length} characters`);
-    }
-
-    // Build the user message with contract context
     const userMessageContent = contractSummary
       ? `Contract Summary:\n${contractSummary}\n\nFull Contract Text:\n${truncatedText}\n\nQuestion:\n${userQuestion}`
       : `Contract Text:\n${truncatedText}\n\nQuestion:\n${userQuestion}`;
 
-    // Prepare the API request
-    const payload = {
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: CHAT_SYSTEM_PROMPT,
-        },
-        {
-          role: 'user',
-          content: userMessageContent,
-        },
-      ],
-      temperature: 0.5, // Slightly higher than analysis for more natural conversation
-      max_tokens: 1024, // Reasonable limit for chat response
-    };
-
-    console.log('[Chat AI] Sending request to OpenRouter...');
-
-    // Call OpenRouter API
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    // Handle API errors
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({})) as any;
-      const statusCode = response.status;
-      const errorMessage = errorData.error?.message || response.statusText;
-
-      console.error(`[Chat AI] OpenRouter API error (${statusCode}):`, errorMessage);
-
-      if (statusCode === 429) {
-        return {
-          success: false,
-          error: 'AI service is currently rate-limited. Please try again in a moment.',
-        };
-      }
-
-      if (statusCode === 401 || statusCode === 403) {
-        return {
-          success: false,
-          error: 'AI service authentication failed. Please check API configuration.',
-        };
-      }
-
-      if (statusCode >= 500) {
-        return {
-          success: false,
-          error: 'AI service is temporarily unavailable. Please try again later.',
-        };
-      }
-
-      return {
-        success: false,
-        error: `AI service error: ${errorMessage}`,
-      };
-    }
-
-    // Parse response
-    const responseData = await response.json() as any;
-    console.log('[Chat AI] Received response from OpenRouter');
-
-    // Extract the assistant's message
-    const aiResponseText = responseData.choices?.[0]?.message?.content;
-
-    if (!aiResponseText) {
-      console.error('[Chat AI] No content in API response');
-      return {
-        success: false,
-        error: 'Received empty response from AI service',
-      };
-    }
-
-    console.log('[Chat AI] Response generated successfully');
+    const responseText = await callLLM(CHAT_SYSTEM_PROMPT, userMessageContent, 0.4, 1024, false);
 
     return {
       success: true,
-      response: aiResponseText,
+      response: responseText,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('[Chat AI] Unexpected error:', errorMessage);
     return {
       success: false,
-      error: `Unexpected error during chat: ${errorMessage}`,
+      error: `AI Chat Error: ${errorMessage}`,
     };
   }
 }

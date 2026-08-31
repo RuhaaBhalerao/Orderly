@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,44 +12,118 @@
 
 html {
   scroll-behavior: smooth;
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  background-color: #F7F7F2;
+  color: #16231F;
 }
 
 body {
+  background-color: #F7F7F2;
+  color: #16231F;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Animations */
-@keyframes slide-in-from-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+/* Explicit Green Aesthetic Palette Utilities */
+.bg-forest {
+  background-color: #173F32 !important;
+}
+.bg-forest-dark {
+  background-color: #0F2C23 !important;
+}
+.bg-forest-light {
+  background-color: #245646 !important;
+}
+.bg-forest-muted {
+  background-color: #527968 !important;
 }
 
-.animate-in {
-  animation: slide-in-from-right 0.3s ease-out;
+.bg-sage {
+  background-color: #BFD8CC !important;
+}
+.bg-sage-light {
+  background-color: #D5E6DE !important;
 }
 
-/* Scrollbar */
+.bg-mint {
+  background-color: #DCEDE5 !important;
+}
+.bg-mint-light {
+  background-color: #EDF5F1 !important;
+}
+.bg-mint-surface {
+  background-color: #F4F9F6 !important;
+}
+
+.bg-canvas {
+  background-color: #F7F7F2 !important;
+}
+
+/* Text Utilities */
+.text-forest {
+  color: #173F32 !important;
+}
+.text-forest-light {
+  color: #245646 !important;
+}
+.text-forest-muted {
+  color: #527968 !important;
+}
+.text-sage {
+  color: #BFD8CC !important;
+}
+.text-mint {
+  color: #DCEDE5 !important;
+}
+.text-bodyText {
+  color: #16231F !important;
+}
+.text-mutedText {
+  color: #63736D !important;
+}
+
+/* Border Utilities */
+.border-forest {
+  border-color: #173F32 !important;
+}
+.border-forest-light {
+  border-color: #245646 !important;
+}
+.border-sage {
+  border-color: #BFD8CC !important;
+}
+.border-subtleBorder {
+  border-color: #DCE3DF !important;
+}
+
+/* Organic subtle background pattern */
+.bg-organic-pattern {
+  background-color: #F7F7F2;
+  background-image: radial-gradient(#BFD8CC 1px, transparent 1px), radial-gradient(#BFD8CC 1px, #F7F7F2 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #F7F7F2;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: #BFD8CC;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #527968;
+}
+
+::selection {
+  background-color: #DCEDE5;
+  color: #173F32;
 }

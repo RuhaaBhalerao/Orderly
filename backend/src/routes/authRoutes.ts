@@ -12,29 +12,24 @@ const router = Router();
 
 /**
  * POST /api/auth/register
- * Register a new user
- * Rate limited: 5 attempts per 15 minutes
  */
 router.post(
   '/register',
   authLimiter,
   [
     body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email')
-      .isEmail()
-      .withMessage('Valid email is required')
-      .normalizeEmail(),
-    body('password')
-      .isLength({ min: 8 })
-      .withMessage('Password must be at least 8 characters'),
+    body('employeeId').trim().notEmpty().withMessage('Employee ID is required'),
+    body('email').isEmail().withMessage('Valid email is required').normalizeEmail(),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+    body('role')
+      .isIn(['REQUESTER', 'MANAGER', 'PROCUREMENT_OFFICER'])
+      .withMessage('Role must be one of REQUESTER, MANAGER, or PROCUREMENT_OFFICER'),
   ],
   registerController
 );
 
 /**
  * POST /api/auth/login
- * Login user
- * Rate limited: 5 attempts per 15 minutes
  */
 router.post(
   '/login',
@@ -48,7 +43,6 @@ router.post(
 
 /**
  * GET /api/auth/me
- * Get current authenticated user
  */
 router.get('/me', authMiddleware, meController);
 

@@ -4,7 +4,6 @@ import { verifyToken } from '../utils/jwt';
 
 /**
  * Middleware to verify JWT token and attach user info to request
- * Required for all protected endpoints
  */
 export function authMiddleware(
   req: AuthRequest,
@@ -12,7 +11,6 @@ export function authMiddleware(
   next: NextFunction
 ): void {
   try {
-    // Get Authorization header
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -22,10 +20,7 @@ export function authMiddleware(
       return;
     }
 
-    // Extract token
     const token = authHeader.substring(7);
-
-    // Verify token
     const payload = verifyToken(token);
 
     if (!payload) {
@@ -35,9 +30,11 @@ export function authMiddleware(
       return;
     }
 
-    // Attach user info to request
     req.userId = payload.userId;
     req.userEmail = payload.email;
+    req.userRole = payload.role;
+    req.userDepartment = payload.department;
+    req.employeeId = payload.employeeId;
 
     next();
   } catch (error) {
