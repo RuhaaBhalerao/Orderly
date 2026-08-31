@@ -32,7 +32,7 @@ async function main() {
     { employeeId: 'EMP008', name: 'Neha Verma', email: 'neha@example.com', department: 'Marketing', role: 'REQUESTER', isActive: true },
     { employeeId: 'EMP009', name: 'Karan Singh', email: 'karan@example.com', department: 'Operations', role: 'REQUESTER', isActive: true },
     { employeeId: 'EMP010', name: 'Isha Nair', email: 'isha@example.com', department: 'Finance', role: 'REQUESTER', isActive: true },
-    { employeeId: 'ADMIN001', name: 'System Admin', email: 'admin@procureai.com', department: 'IT', role: 'ADMIN', isActive: true },
+    { employeeId: 'ADMIN001', name: 'System Admin', email: 'admin@orderly.com', department: 'IT', role: 'ADMIN', isActive: true },
   ];
 
   for (const emp of employeeData) {
@@ -49,7 +49,7 @@ async function main() {
     data: {
       employeeId: 'ADMIN001',
       name: 'System Admin',
-      email: 'admin@procureai.com',
+      email: 'admin@orderly.com',
       password: adminPasswordHash,
       role: 'ADMIN',
       department: 'IT',

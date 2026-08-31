@@ -1,892 +1,236 @@
-# Procure AI
+# Orderly
 
-## AI-Powered Contract Intelligence Platform
+## Procurement Operations Platform
 
-An enterprise application that automates the contract intake and review process by connecting directly to Gmail, importing supplier contracts, extracting critical information using AI, and presenting everything in a centralized, intelligent dashboard.
+Orderly is a procurement workflow system for employee-driven purchasing, supplier management, approval tracking, and spend visibility. The app supports the full lifecycle from purchase request creation to manager approval, supplier comparison, purchase order issuance, and operational monitoring.
 
-**Status:** MVP (Minimum Viable Product)  
-**Last Updated:** July 2026
-
----
-
-## Table of Contents
-
-- [Problem Statement](#problem-statement)
-- [Solution](#solution)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Environment Variables](#environment-variables)
-- [Running the Project](#running-the-project)
-- [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
-- [Usage Guide](#usage-guide)
-- [Contributing](#contributing)
-- [License](#license)
+**Status:** Active MVP  
+**Last Updated:** August 2026
 
 ---
 
-## Problem Statement
+## What the app does today
 
-Procurement teams receive supplier contracts via email daily but the current workflow is manual and repetitive:
+Orderly is not a contract AI or Gmail inbox tool. The current product is a procurement platform with these workflows:
 
-1. Supplier sends contract via email
-2. Manager downloads PDF to local storage
-3. File is manually organized
-4. PDF is uploaded into separate system
-5. Manager reads dozens of pages searching for critical info
-6. Key details extracted manually and recorded
-7. Decisions made with incomplete or delayed information
+1. Employee login and role-based access
+2. Purchase request creation by requesters
+3. Manager approval and rejection actions
+4. Supplier comparison with weighted scoring
+5. Procurement officer supplier selection and purchase order generation
+6. Contract record tracking tied to suppliers and purchase orders
+7. Dashboard metrics, analytics, audit logs, and notifications
 
-**Result:** Missed renewal dates, overlooked risks, time wasted on manual work, and poor visibility into contract portfolio.
-
-**Procure AI solves this** by automatically processing incoming contracts and presenting actionable intelligence instantly.
+This means the system matches a real internal purchasing process instead of the earlier document-intelligence concept.
 
 ---
 
-## Solution
+## Core features
 
-Instead of acting as another document upload tool, Procure AI acts as an **intelligent contract inbox**.
+### Authentication and roles
 
-### User Workflow
+- Email/password login with JWT authentication
+- Role-based access for REQUESTER, MANAGER, PROCUREMENT_OFFICER, and ADMIN
+- Employee ID validation during registration
+- Demo accounts for quick testing
 
-```
-1. Connect Gmail
-   ↓
-2. Click Sync Inbox
-   ↓
-3. Spring Boot retrieves contract emails
-   ↓
-4. AI extracts intelligence from PDFs
-   ↓
-5. Data stored in PostgreSQL
-   ↓
-6. Dashboard updates automatically
-   ↓
-7. Review contracts and ask AI questions
-```
+### Purchase request workflow
 
-**Key Benefit:** No manual downloads. No manual uploads. No reading entire documents. Just intelligent, actionable contract data.
+- Create purchase requests with category, quantity, budget, and due date
+- Track status through pending, approved, rejected, and ordered states
+- Manager dashboard for approval and rejection decisions
+- Department-based visibility rules
 
----
+### Supplier management
 
-## Features
+- Supplier directory with category, rating, payment terms, and status
+- Search and filtering by category or availability
+- Supplier comparison based on price, rating, delivery performance, and risk
 
-### ✅ Implemented (MVP)
+### Purchase order creation
 
-- **User Authentication**
-  - Email/password registration and login
-  - Secure JWT token management
-  - Password hashing with bcrypt
+- Selected supplier becomes the basis for a purchase order
+- PO generation with totals, line items, payment terms, and expected delivery
+- Order lifecycle tracking and audit events
 
-- **Gmail Integration**
-  - OAuth 2.0 connection (read-only scope)
-  - Automatic contract email detection
-  - PDF attachment extraction
-  - One-click inbox sync
+### Contracts and records
 
-- **AI-Powered Contract Intelligence**
-  - PDF text extraction
-  - AI-generated summaries (200-300 words)
-  - Key field extraction:
-    - Vendor name, contract type
-    - Dates (start, end, renewal)
-    - Payment terms
-    - Key obligations
-    - Restrictions
-  - Risk identification and flagging
-  - Risk severity levels (Low, Medium, High)
+- Contract records linked to suppliers and purchase orders
+- Contract value, start date, expiry date, renewal date, and file metadata
+- Document storage and tracking within procurement workflows
 
-- **Centralized Dashboard**
-  - Gmail connection status
-  - KPI cards:
-    - Total contracts imported
-    - Pending review count
-    - High-risk contracts
-    - Contracts expiring soon (30 days)
-  - Recent contracts table
-  - One-click contract access
+### Analytics and operations
 
-- **Contract Details Page**
-  - Contract overview with metadata
-  - AI-generated summary
-  - Extracted fields in structured format
-  - Risk indicators with descriptions
-  - Embedded PDF viewer
-  - Contract metadata download
-
-- **AI Chat for Q&A**
-  - Ask questions about specific contracts
-  - AI provides contextual answers
-  - Chat history with timestamps
-  - Clear chat history option
-
-- **Settings**
-  - Manage Gmail connection
-  - Connect/disconnect Gmail
-  - Connection status display
-
-### 📋 Future Scope (Not in MVP)
-
-- Team collaboration and multi-user management
-- Role-based access control (RBAC)
-- Contract approval workflows
-- Notifications and alerts
-- Advanced analytics and reporting
-- Contract comparison tools
-- Outlook integration
-- Automatic background monitoring
-- Vendor management system
-- Advanced search and filtering
-- API integrations (Salesforce, Ariba, etc.)
+- Dashboard KPIs for requests, orders, approvals, and supplier health
+- Analytics for supplier spend and department activity
+- Notification feed and audit log history
 
 ---
 
-## Tech Stack
+## Tech stack
 
 ### Frontend
 
-- **Framework:** Next.js 14+ (React, TypeScript)
-- **Styling:** Tailwind CSS 3+
-- **Components:** shadcn/ui
-- **State Management:** React Query (TanStack Query)
-- **Charts:** Recharts
-- **HTTP:** Fetch API / Axios
-- **Authentication:** JWT (HTTP-only cookies)
+- Next.js
+- TypeScript
+- Tailwind CSS
+- App Router
+- React hooks and context-based session state
 
 ### Backend
 
-- **Framework:** Spring Boot 3.x (Java)
-- **Language:** OpenJDK 17+
-- **Web:** Spring Web MVC (REST APIs)
-- **Security:** Spring Security 6.x
-- **ORM:** Spring Data JPA / Hibernate
-- **Database:** PostgreSQL 14+
-- **Build:** Maven or Gradle
-- **Deployment:** Docker / Kubernetes
-
-### AI Service
-
-- **Framework:** FastAPI (Python)
-- **Language:** Python 3.10+
-- **PDF Processing:** PyPDF2 / pdfplumber
-- **LLM Integration:** OpenAI API / LangChain
-- **Async:** asyncio
-- **Validation:** Pydantic 2.x
-
-### Database
-
-- **Primary:** PostgreSQL 14+
-- **Schema Versioning:** Flyway / Liquibase
-- **Connection Pooling:** HikariCP
+- Node.js
+- Express.js
+- TypeScript
+- Prisma ORM
+- PostgreSQL
+- JWT and bcrypt
 
 ### Infrastructure
 
-- **Containerization:** Docker
-- **Local Orchestration:** Docker Compose
-- **Production:** Kubernetes (EKS/GKE/AKS)
-- **CI/CD:** GitHub Actions / GitLab CI
-- **API Docs:** Swagger/OpenAPI 3.0
+- Local PostgreSQL database
+- Environment-based configuration
+- REST API architecture
 
 ---
 
-## Architecture
+## Project structure
 
-### System Architecture
-
+```bash
+Orderly/
+├── frontend/                  # Next.js UI
+│   ├── app/
+│   ├── components/
+│   ├── context/
+│   ├── hooks/
+│   ├── lib/
+│   └── types/
+├── backend/                  # Express + Prisma API
+│   ├── src/
+│   ├── prisma/
+│   ├── tests/
+│   ├── uploads/
+│   └── package.json
+├── README.md                 # Project overview
+├── PRD.md                    # Product requirements
+├── TRD.md                    # Technical requirements
+├── Orderly_Backend.postman_collection.json
+└── .gitignore
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     CLIENT LAYER                                │
-│  Next.js Frontend (TypeScript, React, Tailwind CSS, shadcn/ui)  │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │ HTTPS
-                       ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   API GATEWAY / BACKEND                          │
-│         Spring Boot (Java, REST API, Authentication)            │
-│  ├─ Authentication Service                                      │
-│  ├─ Gmail Integration Service                                   │
-│  ├─ Contract Management Service                                 │
-│  └─ Orchestration & Data Routing                                │
-└──────────────────────┬──────────────────────────────────────────┘
-         │                              │
-         │                              │
-    ┌────▼──────┐              ┌───────▼────────┐
-    │   Gmail   │              │  FastAPI      │
-    │   API     │              │  AI Service   │
-    │           │              │               │
-    └────┬──────┘              │  • PDF Text   │
-         │                     │  • Summarize  │
-         └────────┐            │  • Extract    │
-                  │            │  • Risk Flag  │
-                  ▼            │  • Q&A        │
-         ┌────────────────┐    └───────┬────────┘
-         │   PostgreSQL   │            │
-         │   Database     │            │
-         │                │            │
-         │ ├─ Users       │            │
-         │ ├─ Contracts   │            │
-         │ ├─ ChatHistory │◄───────────┘
-         │ └─ Metadata    │
-         └────────────────┘
-```
-
-### Component Responsibilities
-
-- **Next.js Frontend:** User interface, authentication, real-time dashboard
-- **Spring Boot Backend:** Business logic, API orchestration, Gmail integration, security
-- **FastAPI AI Service:** Document intelligence, PDF processing, LLM integration
-- **PostgreSQL:** Persistent storage of users, contracts, chat history
 
 ---
 
-## Installation
+## Local setup
 
 ### Prerequisites
 
-- Docker & Docker Compose
 - Node.js 18+
-- Java 17+
-- Python 3.10+
-- PostgreSQL 14+ (if running locally without Docker)
-- Gmail OAuth credentials (Google Cloud Console)
-- OpenAI API key (for AI processing)
+- PostgreSQL
+- npm
 
-### Quick Start (Docker Compose)
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/procure-ai.git
-cd procure-ai
-
-# Copy environment files
-cp backend/.env.example backend/.env
-cp ai-service/.env.example ai-service/.env
-cp frontend/.env.local.example frontend/.env.local
-
-# Update .env files with your credentials
-# Edit backend/.env, ai-service/.env, frontend/.env.local
-
-# Start all services
-docker-compose up --build
-
-# Services will be available at:
-# Frontend: http://localhost:3000
-# Backend: http://localhost:8080
-# AI Service: http://localhost:8000
-# Database: localhost:5432
-```
-
-### Manual Installation
-
-#### Backend (Spring Boot)
+### Backend
 
 ```bash
 cd backend
-
-# Build
-./mvnw clean package
-
-# Or with Gradle
-./gradlew build
-
-# Run
-java -jar target/procure-ai-backend-1.0.0.jar
-
-# Or using IDE
-# Open in IntelliJ IDEA and Run → Run Application
-```
-
-#### AI Service (FastAPI)
-
-```bash
-cd ai-service
-
-# Create virtual environment
-python -m venv venv
-
-# Activate
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run
-python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-#### Frontend (Next.js)
-
-```bash
-cd frontend
-
-# Install dependencies
 npm install
-
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-npm start
-```
-
----
-
-## Environment Variables
-
-### Backend (.env)
-
-```bash
-# Database
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/procure_ai
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=your_db_password
-SPRING_JPA_HIBERNATE_DDL_AUTO=validate
-
-# Gmail OAuth
-GMAIL_CLIENT_ID=your_gmail_client_id_from_google_console
-GMAIL_CLIENT_SECRET=your_gmail_client_secret
-GMAIL_REDIRECT_URI=http://localhost:3000/auth/callback
-
-# JWT
-JWT_SECRET=your_jwt_secret_min_32_characters_long
-JWT_EXPIRATION_HOURS=1
-JWT_REFRESH_EXPIRATION_DAYS=7
-
-# AI Service
-AI_SERVICE_URL=http://localhost:8000
-AI_SERVICE_API_KEY=your_ai_service_key
-
-# Encryption
-ENCRYPTION_KEY=your_encryption_key_32_chars
-```
-
-### AI Service (.env)
-
-```bash
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4  # or gpt-3.5-turbo
-
-# Backend
-BACKEND_URL=http://localhost:8080
-
-# Logging
-LOG_LEVEL=INFO
-```
-
-### Frontend (.env.local)
-
-```bash
-# API
-NEXT_PUBLIC_API_URL=http://localhost:8080/api
-NEXT_PUBLIC_APP_NAME=Procure AI
-
-# Optional
-NEXT_PUBLIC_GA_ID=google_analytics_id  # If using analytics
-```
-
----
-
-## Running the Project
-
-### Option 1: Docker Compose (Recommended)
-
-```bash
-# Start all services
-docker-compose up
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f ai-service
-docker-compose logs -f frontend
-```
-
-### Option 2: Individual Services
-
-```bash
-# Terminal 1: Backend
-cd backend
-./mvnw spring-boot:run
-
-# Terminal 2: AI Service
-cd ai-service
-python -m uvicorn app.main:app --reload
-
-# Terminal 3: Frontend
-cd frontend
+cp .env.example .env
 npm run dev
 ```
 
-### Verify Installation
+### Frontend
 
 ```bash
-# Backend health check
-curl http://localhost:8080/api/health
-
-# AI Service health check
-curl http://localhost:8000/health
-
-# Frontend
-open http://localhost:3000
-```
-
----
-
-## Project Structure
-
-```
-procure-ai/
-├── frontend/                      # Next.js React application
-│   ├── app/                      # App router
-│   │   ├── (auth)/               # Auth pages
-│   │   └── (dashboard)/          # Dashboard pages
-│   ├── components/               # Reusable components
-│   ├── lib/                      # Utilities & hooks
-│   ├── types/                    # TypeScript types
-│   └── styles/                   # Global styles
-│
-├── backend/                      # Spring Boot application
-│   ├── src/main/
-│   │   ├── java/com/procureai/
-│   │   │   ├── controller/       # REST endpoints
-│   │   │   ├── service/          # Business logic
-│   │   │   ├── repository/       # Data access
-│   │   │   ├── entity/           # JPA entities
-│   │   │   ├── config/           # Configuration
-│   │   │   └── security/         # Security utilities
-│   │   └── resources/
-│   │       ├── application.yml
-│   │       └── db/migration/     # Database migrations
-│   └── pom.xml
-│
-├── ai-service/                   # FastAPI application
-│   ├── app/
-│   │   ├── routes/               # API endpoints
-│   │   ├── services/             # Business logic
-│   │   ├── models/               # Pydantic models
-│   │   └── main.py               # FastAPI app
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── docker-compose.yml            # Local development
-├── README.md                      # This file
-├── PRD.md                         # Product requirements
-├── TRD.md                         # Technical requirements
-└── docs/                          # Additional documentation
-```
-
----
-
-## API Documentation
-
-### Base URL
-
-```
-http://localhost:8080/api
-```
-
-### Authentication Endpoints
-
-#### Register
-
-```bash
-POST /auth/register
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "secure_password",
-  "firstName": "John",
-  "lastName": "Doe"
-}
-```
-
-#### Login
-
-```bash
-POST /auth/login
-Content-Type: application/json
-
-{
-  "email": "user@example.com",
-  "password": "password"
-}
-```
-
-### Gmail Endpoints
-
-#### Connect Gmail
-
-```bash
-GET /gmail/authorize
-```
-
-#### Sync Inbox
-
-```bash
-POST /gmail/sync
-Authorization: Bearer {jwt_token}
-```
-
-#### Gmail Status
-
-```bash
-GET /gmail/status
-Authorization: Bearer {jwt_token}
-```
-
-### Contract Endpoints
-
-#### List Contracts
-
-```bash
-GET /contracts?page=1&limit=20&status=pending_review
-Authorization: Bearer {jwt_token}
-```
-
-#### Get Contract Details
-
-```bash
-GET /contracts/{contractId}
-Authorization: Bearer {jwt_token}
-```
-
-#### Mark Contract as Reviewed
-
-```bash
-PATCH /contracts/{contractId}
-Authorization: Bearer {jwt_token}
-Content-Type: application/json
-
-{
-  "status": "reviewed"
-}
-```
-
-### Chat Endpoints
-
-#### Send Message
-
-```bash
-POST /contracts/{contractId}/chat
-Authorization: Bearer {jwt_token}
-Content-Type: application/json
-
-{
-  "message": "What are the payment terms?"
-}
-```
-
-#### Get Chat History
-
-```bash
-GET /contracts/{contractId}/chat
-Authorization: Bearer {jwt_token}
-```
-
-### Dashboard Endpoints
-
-#### Get Summary
-
-```bash
-GET /dashboard/summary
-Authorization: Bearer {jwt_token}
-```
-
-**See TRD.md for complete API specification.**
-
----
-
-## Usage Guide
-
-### First Time Setup
-
-1. **Register Account**
-   - Go to http://localhost:3000
-   - Click "Sign Up"
-   - Enter email, password, name
-   - Verify email (or skip in dev)
-
-2. **Connect Gmail**
-   - Click "Connect Gmail" on dashboard
-   - Authorize app to read Gmail
-   - Return to dashboard
-   - Gmail status shows "Connected"
-
-3. **Sync Inbox**
-   - Click "Sync Inbox" button
-   - Wait for processing (1-2 minutes for 5 contracts)
-   - Dashboard updates with new contracts
-
-4. **Review Contracts**
-   - Click on a contract in the table
-   - Read AI summary
-   - Review extracted fields
-   - View identified risks
-
-5. **Ask Questions**
-   - Scroll to "AI Chat" section
-   - Type a question about the contract
-   - AI responds with contextual answer
-   - Chat history is saved
-
----
-
-## Screenshots Placeholder
-
-```
-Dashboard:
-┌────────────────────────────────────────────────────┐
-│  Welcome, John!        Gmail Connected             │
-├────────────────────────────────────────────────────┤
-│                                                    │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐         │
-│  │  45      │  │  12      │  │  3       │         │
-│  │ Contracts│  │ Pending  │  │  High    │         │
-│  │Imported  │  │ Review   │  │ Risk     │         │
-│  └──────────┘  └──────────┘  └──────────┘         │
-│                                                    │
-│  Recent Contracts                                 │
-│  ┌──────────────────────────────────────────────┐ │
-│  │ Acme Corp      Service Agr  High Risk Review│ │
-│  │ TechVendor Inc   NDA         Low Risk Review │ │
-│  │ SecureCloud SA  SLA          Medium Risk Rev │ │
-│  └──────────────────────────────────────────────┘ │
-└────────────────────────────────────────────────────┘
-
-Contract Details:
-┌────────────────────────────────────────────────────┐
-│ ACME Corp - Service Agreement                      │
-├────────────────────────────────────────────────────┤
-│                                                    │
-│ Summary:                                           │
-│ This is a 1-year service agreement between...     │
-│ [Full AI-generated summary]                        │
-│                                                    │
-│ Key Fields:                                        │
-│ Vendor: Acme Corp                                 │
-│ Type: Service Agreement                           │
-│ Start: 2026-01-01  End: 2027-01-01               │
-│ Payment: Net 30                                   │
-│                                                    │
-│ Risks (3 identified):                             │
-│ 🔴 HIGH: Auto-renewal without notice             │
-│ 🟡 MED: Unlimited liability clause                │
-│                                                    │
-│ PDF Viewer:                                        │
-│ [Embedded PDF display]                            │
-│                                                    │
-│ AI Chat:                                           │
-│ You: What happens at renewal?                     │
-│ AI: The contract auto-renews for another year...  │
-│                                                    │
-└────────────────────────────────────────────────────┘
-```
-
----
-
-## Development Guide
-
-### Code Style
-
-- **Frontend:** ESLint + Prettier (TypeScript)
-- **Backend:** Google Java Style Guide
-- **AI Service:** PEP 8 + Black formatter
-
-### Running Tests
-
-```bash
-# Frontend tests
 cd frontend
-npm run test
-
-# Backend tests
-cd backend
-./mvnw test
-
-# AI Service tests
-cd ai-service
-pytest
+npm install
+npm run dev
 ```
 
-### Building for Production
+### Default app URLs
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5000
+- Health check: http://localhost:5000/api/health
+
+---
+
+## Environment variables
+
+### Backend
 
 ```bash
-# Frontend
-cd frontend
-npm run build
-npm start
-
-# Backend
-cd backend
-./mvnw clean package -DskipTests
-
-# AI Service
-cd ai-service
-pip install -r requirements.txt
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+DATABASE_URL="postgresql://postgres:your_password@localhost:5432/orderly"
+JWT_SECRET="your_super_secret_key"
+PORT=5000
+NODE_ENV="development"
+FRONTEND_URL="http://localhost:3000"
+OPENROUTER_API_KEY="optional"
+GEMINI_API_KEY="optional"
 ```
 
-### Debugging
-
-- **Frontend:** Chrome DevTools, Next.js debug logs
-- **Backend:** Application logs at `target/logs/`
-- **AI Service:** Logs in terminal, FastAPI docs at `/docs`
-
----
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add your feature'`)
-4. Push to the branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-### Code Review Guidelines
-
-- All PRs require review before merge
-- Tests must pass
-- Code must follow style guidelines
-- Documentation must be updated
-- Commits should be atomic and well-described
-
----
-
-## Future Enhancements
-
-### Phase 2: Collaboration & Workflows
-
-- Team management and multi-user support
-- Role-based access control (RBAC)
-- Contract approval workflows
-- Comments and annotations
-- Team member assignments
-
-### Phase 3: Intelligence & Analytics
-
-- Advanced analytics dashboard
-- Predictive renewal alerts
-- Contract comparison tools
-- Vendor performance tracking
-- Compliance reporting
-
-### Phase 4: Enterprise Features
-
-- Real-time notifications
-- Outlook integration
-- Automatic background monitoring
-- Advanced search and filtering
-- Vendor management system
-- Third-party integrations (Salesforce, Ariba)
-
----
-
-## Deployment
-
-### Development
+### Frontend
 
 ```bash
-docker-compose up
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_APP_NAME=Orderly
 ```
 
-### Staging/Production
+---
 
-```bash
-# Using Kubernetes
-kubectl apply -f k8s/
-kubectl apply -f k8s/ingress.yaml
+## User journey
 
-# Using Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
-```
+### Requester flow
 
-**See TRD.md for detailed deployment architecture.**
+- Sign in as a requester
+- Create a purchase request
+- Submit it for manager approval
+
+### Manager flow
+
+- Review pending requests
+- Approve or reject with comments
+- Send approved requests to procurement
+
+### Procurement officer flow
+
+- Compare suppliers for approved requests
+- Select a supplier
+- Create purchase orders
+
+### Admin flow
+
+- Manage users, audit logs, and operational oversight
 
 ---
 
-## Troubleshooting
+## Current product scope
 
-### Gmail Connection Fails
+### Included in current MVP
 
-- Verify Gmail OAuth credentials in backend `.env`
-- Check that OAuth redirect URI matches Google Console configuration
-- Ensure user has authorized app permissions
+- Employee registration and login
+- Role-based authorization
+- Purchase request management
+- Supplier catalog and comparison
+- Purchase order creation
+- Contract tracking
+- Dashboard and analytics
+- Notifications and audit logs
 
-### AI Processing Times Out
+### Not the current scope
 
-- Check AI service is running (`http://localhost:8000/docs`)
-- Verify OpenAI API key is valid
-- Check PDF file size (very large PDFs may timeout)
-
-### Database Connection Error
-
-- Verify PostgreSQL is running
-- Check database credentials in backend `.env`
-- Ensure database is created: `createdb procure_ai`
-
-### Frontend Cannot Connect to Backend
-
-- Verify backend is running on port 8080
-- Check CORS configuration in Spring Security
-- Verify `NEXT_PUBLIC_API_URL` in frontend `.env.local`
+- Gmail integration
+- PDF contract intelligence
+- AI summarization of legal documents
+- Auto-importing email attachments
 
 ---
 
-## License
+## Useful links
 
-This project is licensed under the MIT License. See `LICENSE` file for details.
-
----
-
-## Project Information
-
-**Portfolio Project:** This project demonstrates enterprise application architecture, microservice communication, AI integration, and modern DevOps practices suitable for a software engineering portfolio.
-
-**Learning Outcomes:**
-- Full-stack development (React/TypeScript, Java Spring Boot, Python FastAPI)
-- Microservice architecture and communication
-- OAuth 2.0 authentication and email integration
-- AI/LLM integration with OpenAI API
-- Database design and optimization
-- REST API design and documentation
-- Docker and containerization
-- Kubernetes deployment
-- Security best practices
-- Production-ready code patterns
+- [PRD.md](PRD.md)
+- [TRD.md](TRD.md)
 
 ---
 
-## Support
+## Notes
 
-For issues, questions, or suggestions:
-
-1. Check existing GitHub Issues
-2. Review FAQ in discussions
-3. Create a new issue with detailed description
-4. Contact maintainers
-
----
-
-**Last Updated:** July 2026  
-**Version:** 1.0.0 (MVP)  
-**Status:** Active Development
-
----
-
-### Quick Links
-
-- 📄 [Product Requirements Document (PRD)](./PRD.md)
-- 📋 [Technical Requirements Document (TRD)](./TRD.md)
-- 🔧 [Architecture Documentation](./docs/ARCHITECTURE.md)
-- 📚 [API Documentation](./docs/API.md)
-- 🚀 [Deployment Guide](./docs/DEPLOYMENT.md)
-- 🐛 [Troubleshooting](./docs/TROUBLESHOOTING.md)
+Orderly is the current product identity of this codebase. Older documentation and branding references to ProcureAI were kept only as historical notes and should be treated as legacy naming.

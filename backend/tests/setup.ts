@@ -14,7 +14,7 @@ process.env.OPENROUTER_MODEL = 'test-model';
 
 // Mock database URL if not set
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/procure_ai_test';
+  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/orderly_test';
 }
 
 // Suppress console logs during tests (optional, comment out for debugging)

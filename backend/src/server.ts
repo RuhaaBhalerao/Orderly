@@ -123,12 +123,12 @@ app.use(errorMiddleware);
 app.listen(PORT, () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║       ProcureAI Backend - Node.js + Express              ║
+║       Orderly Backend - Node.js + Express                ║
 ╠══════════════════════════════════════════════════════════╣
 ║ ✅ Server running on port ${PORT}                        ║
 ║ 📍 Environment: ${NODE_ENV}                               ║
 ║ 🌐 Frontend URL: ${FRONTEND_URL}                         ║
-║ 🗄️  Database: PostgreSQL (Neon)                          ║
+║ 🗄️  Database: PostgreSQL                                 ║
 ║ 🏥 Health: http://localhost:${PORT}/health              ║
 ║ 📁 Uploads: /uploads/contracts/                          ║
 ╚══════════════════════════════════════════════════════════╝

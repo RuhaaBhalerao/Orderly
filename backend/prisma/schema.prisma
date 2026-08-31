@@ -1,4 +1,4 @@
-// This is your Prisma schema file for ProcureAI
+// Prisma schema for the Orderly procurement platform
 
 generator client {
   provider = "prisma-client-js"

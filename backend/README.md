@@ -1,6 +1,6 @@
-# Procure AI Backend
+# Orderly Backend
 
-Node.js + Express + TypeScript backend for Procure AI - AI-powered Contract Intelligence Platform
+Node.js + Express + TypeScript backend for the Orderly procurement operations platform.
 
 ## Tech Stack
 
@@ -26,46 +26,21 @@ Node.js + Express + TypeScript backend for Procure AI - AI-powered Contract Inte
 - ✅ Security headers (HSTS, X-Frame-Options, X-Content-Type-Options)
 - ✅ Environment validation on startup
 
-### Phase 2: Contract Management
-- ✅ Create contracts (owned by user)
-- ✅ List all user contracts
-- ✅ Get single contract details
-- ✅ Update contract information
-- ✅ Delete contracts (with cascade)
-- ✅ User ownership verification (IDOR prevention)
+### Core workflow: purchase requests and approvals
+- ✅ Employee registration with role validation
+- ✅ Requester purchase request creation
+- ✅ Manager approval and rejection workflows
+- ✅ Supplier comparison and scoring
+- ✅ Purchase order creation and tracking
+- ✅ Contract records tied to suppliers and POs
+- ✅ Dashboard analytics and notifications
+- ✅ Audit log capture for operational activity
 
-### Phase 3: PDF Upload & Text Extraction
-- ✅ PDF upload with file validation
-- ✅ Automatic text extraction from PDFs
-- ✅ File storage management with UUID filenames
-- ✅ Secure filename handling
-- ✅ Rate limiting on uploads (20 per hour)
-
-### Phase 4: AI Contract Analysis
-- ✅ OpenRouter AI integration
-- ✅ Contract summarization
-- ✅ Key information extraction
-- ✅ Risk analysis and identification
-- ✅ Structured JSON responses with validation
-- ✅ Analysis status tracking (PENDING → COMPLETED/FAILED)
-- ✅ API error handling and fallback
-
-### Phase 5: Chat History
-- ✅ Save chat messages (user + AI response)
-- ✅ Retrieve chat history for contracts
-- ✅ Timestamp tracking
-- ✅ Contract ownership verification
-- ✅ Conversation continuity
-
-### Phase 6: Gmail Integration (🆕)
-- ✅ Gmail OAuth2 authorization flow
-- ✅ Token encryption (AES-256-GCM) for secure storage
-- ✅ Inbox synchronization with PDF attachment fetching
-- ✅ Automatic contract creation from email attachments
-- ✅ Email-to-contract workflow
-- ✅ Token refresh handling
-- ✅ Sync status tracking
-- ✅ Rate limiting on Gmail operations (10 per hour)
+### Supporting features
+- ✅ PDF upload and document retention for procurement records
+- ✅ OpenRouter AI integration for optional analysis
+- ✅ Gmail OAuth flow as an optional integration
+- ✅ Structured validation and middleware protections
 
 ## Project Structure
 
@@ -124,7 +99,7 @@ backend/
 psql -U postgres
 
 # Create database
-CREATE DATABASE procure_ai;
+CREATE DATABASE orderly;
 
 # Exit psql
 \q
@@ -160,7 +135,7 @@ cp .env.example .env
 
 **Example .env file:**
 ```
-DATABASE_URL="postgresql://postgres:your_password@localhost:5432/procure_ai"
+DATABASE_URL="postgresql://postgres:your_password@localhost:5432/orderly"
 JWT_SECRET="your-super-secret-jwt-key-change-in-production"
 JWT_EXPIRES_IN="7d"
 PORT=5000
@@ -198,7 +173,7 @@ OPENROUTER_MODEL="google/gemma-3-27b-it"
 
 1. **Create Google Cloud Project:**
    - Go to [Google Cloud Console](https://console.cloud.google.com)
-   - Create new project: "ProcureAI"
+   - Create new project: "Orderly"
    - Enable Gmail API: Search "Gmail API" → Click "Enable"
 
 2. **Create OAuth2 Credentials:**
@@ -245,7 +220,7 @@ The backend will start on `http://localhost:5000`
 You should see:
 ```
 ╔══════════════════════════════════════════════════════════╗
-║       Procure AI Backend - Node.js + Express             ║
+║       Orderly Backend - Node.js + Express                 ║
 ╠══════════════════════════════════════════════════════════╣
 ║ Server running on port 5000                              ║
 ║ Environment: development                                 ║

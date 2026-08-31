@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ProcureAI Backend API Endpoint Test Script
+# Orderly Backend API Endpoint Test Script
 # Tests core functionality via curl
 # Usage: bash test-endpoints.sh
 
@@ -11,7 +11,7 @@ TOKEN=""
 CONTRACT_ID=""
 
 echo "╔════════════════════════════════════════════════════════════╗"
-echo "║     ProcureAI Backend API Endpoint Test Suite               ║"
+echo "║     Orderly Backend API Endpoint Test Suite                ║"
 echo "║     Make sure backend is running: npm run dev               ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 

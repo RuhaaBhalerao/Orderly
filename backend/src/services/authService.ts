@@ -31,11 +31,11 @@ const DEMO_ACCOUNTS = {
     role: 'PROCUREMENT_OFFICER',
     department: 'Procurement',
   },
-  'admin@procureai.com': {
+  'admin@orderly.com': {
     id: 'demo-admin',
     employeeId: 'ADMIN001',
     name: 'System Admin',
-    email: 'admin@procureai.com',
+    email: 'admin@orderly.com',
     password: 'Admin@123',
     role: 'ADMIN',
     department: 'IT',

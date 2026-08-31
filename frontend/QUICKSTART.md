@@ -1,4 +1,4 @@
-# Quick Start Guide - Procure AI Frontend
+# Quick Start Guide - Orderly Frontend
 
 ## Get Running in 2 Minutes
 

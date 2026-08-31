@@ -1,23 +1,23 @@
-# Procure AI - Frontend
+# Orderly - Frontend
 
-A production-quality Next.js frontend for the Procure AI contract intelligence platform.
+A Next.js frontend for the Orderly procurement operations platform.
 
 ## Features
 
 - **Modern UI Design** - Enterprise-grade, clean, and spacious interface
 - **Complete Pages**
-  - Login page with demo credentials
-  - Dashboard with KPI cards and contract overview
-  - Contract details with AI summary, extracted fields, and identified risks
-  - Chat interface for asking questions about contracts
-  - Contracts listing with search and filtering
-  - Settings page for Gmail integration and preferences
+  - Login page with role-based demo access
+  - Dashboard with procurement KPIs and activity widgets
+  - Requests workflow for creation and approval
+  - Supplier catalog and comparison views
+  - Purchase order management and contract tracking
+  - Analytics and notifications overview
 - **Responsive Design** - Optimized for desktop, tablet, and mobile
-- **Mock Data** - All data is hardcoded for demo purposes
+- **Mock Data** - Demo data for procurement scenarios
 - **Component Architecture** - Reusable, modular components
 - **TypeScript** - Full type safety throughout
 - **Toast Notifications** - User feedback system
-- **Production Ready** - Professional code quality and best practices
+- **Production Ready** - Professional internal operations UI
 
 ## Tech Stack
 
@@ -113,8 +113,8 @@ The application will be available at `http://localhost:3000`
 
 ```bash
 # .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8080/api
-NEXT_PUBLIC_APP_NAME=Procure AI
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+NEXT_PUBLIC_APP_NAME=Orderly
 ```
 
 ## Usage
@@ -128,16 +128,17 @@ NEXT_PUBLIC_APP_NAME=Procure AI
 
 ### Dashboard
 
-- View KPI cards summarizing contract metrics
-- See recent contracts with status and risk indicators
-- Click "Sync Inbox" to simulate inbox synchronization
-- Click "Review" on any contract to view details
+- View KPI cards summarizing request and order activity
+- See recent approvals, orders, and supplier health indicators
+- Review notifications and operational summaries
+- Navigate to requests, suppliers, and purchase orders
 
-### Contract Details
+### Request and Supplier Workflow
 
-- View AI-generated summary
-- Review extracted contract fields
-- Check identified risks and recommendations
+- Create a purchase request for a team need
+- Review pending requests as a manager
+- Compare supplier options for approved requests
+- Create purchase orders with the selected vendor
 - Ask questions using the AI chat interface
 - Simulate chat interactions
 

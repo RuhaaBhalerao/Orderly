@@ -1,7 +1,7 @@
 {
-  "name": "procure-ai-backend",
+  "name": "orderly-backend",
   "version": "1.0.0",
-  "description": "Node.js backend for Procure AI - AI-powered Contract Intelligence Platform",
+  "description": "Node.js backend for Orderly - procurement operations platform",
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
@@ -21,12 +21,13 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "keywords": [
-    "procure",
-    "ai",
-    "contracts",
-    "intelligence"
+    "orderly",
+    "procurement",
+    "purchase-requests",
+    "supplier-management",
+    "purchase-orders"
   ],
-  "author": "ProcureAI",
+  "author": "Orderly",
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.8.1",

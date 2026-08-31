@@ -7,8 +7,8 @@
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
-const TOKEN_KEY = 'procure_ai_token';
-const USER_KEY = 'procure_ai_user';
+const TOKEN_KEY = 'orderly_token';
+const USER_KEY = 'orderly_user';
 
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;

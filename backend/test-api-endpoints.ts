@@ -280,7 +280,7 @@ async function testInvalidCredentials() {
 
 async function runAllTests() {
   console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║     ProcureAI Backend API Endpoint Test Suite               ║');
+  console.log('║     Orderly Backend API Endpoint Test Suite                ║');
   console.log('║     Make sure backend is running: npm run dev               ║');
   console.log('╚════════════════════════════════════════════════════════════╝');
 
