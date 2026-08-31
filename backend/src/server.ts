@@ -106,6 +106,15 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/audit-logs', auditLogRoutes);
 
+// Root endpoint for platform and deployment checks
+app.get('/', (req: Request, res: Response) => {
+  res.status(200).json({
+    message: 'Orderly API is running',
+    status: 'ok',
+    version: '1.0.0'
+  });
+});
+
 // 404 handler
 app.use((req: Request, res: Response) => {
   res.status(404).json({ 
