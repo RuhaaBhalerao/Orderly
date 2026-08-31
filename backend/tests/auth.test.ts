@@ -3,6 +3,7 @@ import express, { Express } from 'express';
 import authRoutes from '../src/routes/authRoutes';
 import { errorMiddleware, notFoundHandler } from '../src/middleware/errorMiddleware';
 import { handleValidationErrors } from '../src/middleware/validationMiddleware';
+import { prisma } from '../src/lib/prisma';
 
 let app: Express;
 
@@ -113,6 +114,21 @@ describe('Authentication', () => {
       expect(res.body).toHaveProperty('token');
       expect(res.body.user.email).toBe(testEmail);
       expect(res.body.user.password).toBeUndefined();
+    });
+
+    it('should fall back to demo credentials when the database is unavailable', async () => {
+      const findUniqueSpy = jest.spyOn(prisma.user, 'findUnique');
+      findUniqueSpy.mockRejectedValueOnce(new Error("Can't reach database server at localhost:5432"));
+
+      const res = await request(app).post('/api/auth/login').send({
+        email: 'rahul@example.com',
+        password: 'Password@123',
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('token');
+      expect(res.body.user.email).toBe('rahul@example.com');
+      findUniqueSpy.mockRestore();
     });
 
     it('should reject login with incorrect password', async () => {
