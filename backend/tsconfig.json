@@ -17,6 +17,7 @@
     "isolatedModules": true,
     "noEmit": false,
     "allowJs": true,
+    "types": ["node"],
     "paths": {
       "@/*": ["./src/*"]
     }
