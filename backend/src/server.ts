@@ -19,6 +19,32 @@ const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+// Parse allowed origins from comma-separated FRONTEND_URL env var
+const allowedOrigins: string[] = [
+  ...FRONTEND_URL.split(',').map((u) => u.trim().replace(/\/$/, '')),
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+];
+
+// Dynamic CORS origin checker — allows explicit origins + all *.vercel.app preview URLs
+const corsOriginFn = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  if (!origin) {
+    // Allow server-to-server / curl requests with no Origin header
+    return callback(null, true);
+  }
+  const normalised = origin.replace(/\/$/, '');
+  if (
+    allowedOrigins.includes(normalised) ||
+    /\.vercel\.app$/.test(normalised) ||
+    /^https?:\/\/localhost(:\d+)?$/.test(normalised)
+  ) {
+    return callback(null, true);
+  }
+  console.warn(`CORS: blocked origin → ${origin}`);
+  return callback(new Error(`CORS policy: origin ${origin} not allowed`));
+};
+
 // Validate critical environment variables
 function validateEnvironment() {
   const errors: string[] = [];
@@ -66,12 +92,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // CORS configuration
 app.use(
   cors({
-    origin: [FRONTEND_URL, 'http://localhost:3000', 'http://localhost:3001'],
+    origin: corsOriginFn,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
+// Explicitly handle OPTIONS preflight for all routes
+app.options('*', cors({ origin: corsOriginFn, credentials: true }));
 
 // Serve static uploads
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
