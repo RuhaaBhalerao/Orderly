@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
+    "module": "ES2020",
     "lib": ["ES2020"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
@@ -12,7 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
@@ -22,5 +21,3 @@
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
 }
-
-
