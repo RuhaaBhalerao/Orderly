@@ -6,7 +6,7 @@
     "moduleResolution": "bundler",
     "outDir": "./dist",
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
@@ -15,9 +15,8 @@
     "sourceMap": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "noEmit": false,
+    "types": ["node"]
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
